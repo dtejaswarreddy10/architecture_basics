@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dojo — AI Training Supercomputer (Tesla)</title>
+<style>
+  :root{
+    --accent:#B91C1C;        /* deep red */
+    --accent-dark:#991b1b;
+    --accent-soft:#fbe0e0;
+    --ink:#2a0a0a;
+    --muted:#7a5050;
+    --bg:#fef5f5;
+    --card:#ffffff;
+    --line:#f3cccc;
+    --shadow:0 8px 24px rgba(153,27,27,.12);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;
+       color:var(--ink);background:var(--bg);line-height:1.65}
+  a{color:var(--accent-dark);text-decoration:none}
+  .topnav{position:sticky;top:0;z-index:20;display:flex;justify-content:space-between;
+    align-items:center;padding:12px 28px;background:rgba(255,255,255,.85);
+    backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+  .topnav .home{font-weight:600;color:var(--muted)}
+  .topnav .home:hover{color:var(--accent-dark)}
+  .topnav .tag{font-weight:700;color:var(--accent-dark);letter-spacing:.5px}
+  .hero{position:relative;overflow:hidden;color:#fff;padding:72px 28px 84px;
+    background:linear-gradient(135deg,#7f1414,var(--accent) 75%)}
+  .hero::after{content:"";position:absolute;inset:0;opacity:.15;
+    background-image:linear-gradient(#fff 1px,transparent 1px),
+      linear-gradient(90deg,#fff 1px,transparent 1px);background-size:26px 26px}
+  .hero-inner{position:relative;max-width:1080px;margin:0 auto;z-index:1}
+  .hero .eyebrow{font-size:.8rem;letter-spacing:3px;text-transform:uppercase;opacity:.85}
+  .hero h1{font-size:3rem;margin:.2em 0 .25em;line-height:1.05}
+  .hero p{font-size:1.2rem;max-width:700px;opacity:.95}
+  .pills{display:flex;flex-wrap:wrap;gap:10px;margin-top:24px}
+  .pill{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.32);
+    padding:7px 14px;border-radius:999px;font-size:.85rem;font-weight:600}
+  main{max-width:1080px;margin:-48px auto 60px;padding:0 22px;position:relative;z-index:5}
+  section{background:var(--card);border:1px solid var(--line);border-radius:18px;
+    padding:30px 34px;margin-bottom:26px;box-shadow:var(--shadow)}
+  .sec-head{display:flex;align-items:center;gap:14px;margin-bottom:18px}
+  .sec-num{flex:0 0 auto;width:44px;height:44px;border-radius:12px;display:grid;
+    place-items:center;font-weight:800;color:#fff;background:var(--accent);font-size:1.1rem}
+  .sec-head h2{font-size:1.5rem}
+  h3{margin:22px 0 8px;font-size:1.1rem;color:var(--accent-dark)}
+  p{margin:8px 0}
+  .callout{border-left:5px solid var(--accent);background:var(--accent-soft);
+    padding:14px 18px;border-radius:0 12px 12px 0;margin:16px 0;font-weight:500}
+  .warn{border-left:5px solid #d97706;background:#fff4e3;padding:14px 18px;
+    border-radius:0 12px 12px 0;margin:16px 0;font-weight:500;color:#7c4a09}
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin:18px 0}
+  .stat{background:linear-gradient(160deg,#fff,var(--accent-soft));border:1px solid var(--line);
+    border-radius:14px;padding:16px;text-align:center}
+  .stat .num{font-size:1.6rem;font-weight:800;color:var(--accent-dark)}
+  .stat .lbl{font-size:.8rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+  .badges{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+  .badge{background:var(--accent-soft);color:var(--accent-dark);border:1px solid var(--line);
+    padding:5px 12px;border-radius:8px;font-size:.85rem;font-weight:600}
+  .twocol{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:16px 0}
+  .panel{border-radius:14px;padding:18px;border:1px solid var(--line)}
+  .panel.good{background:#fbe0e0}
+  .panel.bad{background:#f4eeee;border-color:#e6dada}
+  .panel h4{margin-bottom:8px}
+  .panel.good h4{color:var(--accent-dark)}
+  .panel.bad h4{color:#7c5f5f}
+  .panel ul{margin-left:18px}
+  /* signature: tiling hierarchy D1 -> Tile -> Cabinet -> ExaPOD */
+  .scale{margin:16px 0;padding:24px 14px;border:1px dashed var(--accent);border-radius:14px;
+    background:#fff6f6;display:flex;align-items:center;justify-content:center;gap:4px;
+    flex-wrap:wrap;overflow-x:auto}
+  .lvl{display:flex;flex-direction:column;align-items:center;gap:8px;min-width:96px}
+  .lvl .cap{font-size:.72rem;font-weight:800;color:var(--accent-dark);text-align:center;line-height:1.2}
+  .lvl .cap small{display:block;font-weight:600;color:var(--muted);font-size:.64rem}
+  .die{width:26px;height:26px;border-radius:5px;background:linear-gradient(160deg,var(--accent),var(--accent-dark));
+    box-shadow:var(--shadow)}
+  .tile{display:grid;grid-template-columns:repeat(5,1fr);gap:2px;padding:4px;border-radius:8px;
+    background:var(--accent-soft);border:1px solid var(--line)}
+  .tile i{width:11px;height:11px;border-radius:2px;background:var(--accent)}
+  .cab{display:grid;grid-template-columns:repeat(2,1fr);gap:3px;padding:5px;border-radius:8px;
+    background:var(--accent-soft);border:1px solid var(--line)}
+  .cab .tile{transform:scale(.62);margin:-6px}
+  .pod{width:74px;height:60px;border-radius:10px;display:grid;place-items:center;color:#fff;
+    font-weight:800;font-size:.72rem;text-align:center;background:linear-gradient(160deg,#7f1414,var(--accent));
+    box-shadow:var(--shadow);line-height:1.1}
+  .grow{flex:0 0 auto;color:var(--accent);font-weight:800;font-size:1.3rem;padding:0 2px}
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:.95rem}
+  th,td{padding:11px 14px;text-align:left;border-bottom:1px solid var(--line)}
+  thead th{background:var(--accent);color:#fff}
+  tbody tr:nth-child(even){background:var(--accent-soft)}
+  tbody tr:hover{background:#f6c7c7}
+  .essence{background:linear-gradient(135deg,var(--accent-dark),var(--accent));color:#fff;
+    border-radius:16px;padding:24px 28px;margin:8px 0 4px;box-shadow:var(--shadow)}
+  .essence h3{color:#fff;margin-top:0}
+  footer{text-align:center;color:var(--muted);padding:30px;font-size:.9rem}
+  @media(max-width:640px){.twocol{grid-template-columns:1fr}.hero h1{font-size:2.2rem}}
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <a class="home" href="index.html">← All Architectures</a>
+  <span class="tag">Dojo · Tesla</span>
+</nav>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">AI Training Supercomputer · Tesla</div>
+    <h1>Dojo</h1>
+    <p>A custom supercomputer Tesla designed to train its self-driving neural networks on enormous amounts of video — built from its own D1 chip and scaled by tiling: chips → tiles → cabinets → ExaPOD.</p>
+    <div class="pills">
+      <span class="pill">🚗 Self-driving video training</span>
+      <span class="pill">🔲 Custom D1 chip</span>
+      <span class="pill">🧱 25 dies = Training Tile</span>
+      <span class="pill">⚙️ Vertical integration</span>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <section>
+    <div class="sec-head"><div class="sec-num">1</div><h2>Introduction</h2></div>
+    <h3>What is Dojo?</h3>
+    <p><strong>Dojo</strong> is a <strong>custom AI training supercomputer</strong> built by <strong>Tesla</strong> to train the vision networks behind <strong>Full Self-Driving (FSD)</strong> and Autopilot. It isn't a product you can buy — it was an <strong>internal machine</strong> built from Tesla's own <strong>D1 chip</strong>, optimized for one job: <strong>training on video at massive scale</strong>.</p>
+    <h3>Where did it come from?</h3>
+    <p>Tesla collects <strong>vast camera video</strong> from its fleet. Training on that data demanded enormous compute, so rather than only buying GPUs, Tesla designed a <strong>vertically integrated</strong> system — its own chip, board, and interconnect — tuned for <strong>video-heavy training</strong>.</p>
+    <h3>The main idea</h3>
+    <div class="callout">Build a <strong>seamless, tileable fabric</strong> of compute optimized for one workload. Dojo's philosophy was to <strong>remove boundaries between chips</strong>, making many dies behave like one huge, uniform compute surface.</div>
+    <div class="warn">⚠️ <strong>Status note (2026):</strong> Tesla reportedly <strong>wound down its dedicated Dojo program in 2025</strong>, shifting toward external silicon partners and its inference-focused chips. Dojo remains an influential example of vertically integrated AI-training hardware.</div>
+  </section>
+
+  <section>
+    <div class="sec-head"><div class="sec-num">2</div><h2>Basic Functionality &amp; Architecture</h2></div>
+    <h3>Simple analogy: building with LEGO tiles</h3>
+    <p>Dojo scales like <strong>snapping LEGO tiles together</strong>. One small block (a D1 chip) repeats into a tile; tiles snap into cabinets; cabinets combine into a full system — each level a bigger, seamless version of the same thing.</p>
+
+    <h3>The scaling hierarchy</h3>
+    <div class="scale">
+      <div class="lvl">
+        <div class="die"></div>
+        <div class="cap">D1 chip<small>custom die</small></div>
+      </div>
+      <span class="grow">→</span>
+      <div class="lvl">
+        <div class="tile"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="cap">Training Tile<small>25 D1 dies</small></div>
+      </div>
+      <span class="grow">→</span>
+      <div class="lvl">
+        <div class="cab"><div class="tile"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="tile"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="tile"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="tile"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
+        <div class="cap">Cabinet<small>many tiles</small></div>
+      </div>
+      <span class="grow">→</span>
+      <div class="lvl">
+        <div class="pod">ExaPOD</div>
+        <div class="cap">ExaPOD<small>full system</small></div>
+      </div>
+    </div>
+
+    <h3>Key design ideas</h3>
+    <table>
+      <thead><tr><th>Idea</th><th>What it does</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Mesh interconnect</strong></td><td>D1 dies in a 2-D mesh — high bandwidth, low latency</td></tr>
+        <tr><td><strong>Seamless tiles</strong></td><td>25 dies act like one large chip — fewer boundaries</td></tr>
+        <tr><td><strong>CFP8 datatype</strong></td><td>Configurable 8-bit float balancing range/precision</td></tr>
+        <tr><td><strong>Bandwidth-first</strong></td><td>Whole stack keeps data flowing to compute</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Dojo vs a GPU cluster</h3>
+    <table>
+      <thead><tr><th>Feature</th><th>GPU cluster</th><th>Dojo</th></tr></thead>
+      <tbody>
+        <tr><td>Purpose</td><td>General AI/compute</td><td><strong>Tesla video training</strong></td></tr>
+        <tr><td>Chip</td><td>Off-the-shelf GPU</td><td><strong>Custom D1</strong></td></tr>
+        <tr><td>Scaling unit</td><td>Server + switches</td><td><strong>Training Tile (25 dies)</strong></td></tr>
+        <tr><td>Datatype</td><td>FP16/BF16/FP8</td><td><strong>CFP8 (configurable)</strong></td></tr>
+        <tr><td>Availability</td><td>Buy / rent</td><td><strong>Internal to Tesla</strong></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <div class="sec-head"><div class="sec-num">3</div><h2>Applications</h2></div>
+    <div class="badges">
+      <span class="badge">🚗 Autonomous-driving vision training</span>
+      <span class="badge">🎥 Video-heavy neural-net training</span>
+      <span class="badge">🤖 Tesla AI / robotics</span>
+      <span class="badge">🏭 In-house vertically integrated compute</span>
+    </div>
+    <div class="twocol">
+      <div class="panel good"><h4>✅ Why Tesla built it</h4><ul><li><strong>Tailored</strong> to its exact workload</li><li><strong>Bandwidth</strong> optimized for video</li><li><strong>Vertical integration</strong> — full stack control</li><li>Hedge against GPU-only dependence</li></ul></div>
+      <div class="panel bad"><h4>⛔ What it's NOT</h4><ul><li>A chip you can <strong>buy or rent</strong></li><li>General computing → CPU</li><li>Graphics → GPU</li><li>In-car <strong>inference</strong> (separate FSD chip)</li></ul></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><div class="sec-num">4</div><h2>Market Examples &amp; Future</h2></div>
+    <table>
+      <thead><tr><th>Item</th><th>Note</th></tr></thead>
+      <tbody>
+        <tr><td><strong>D1 chip</strong></td><td>Tesla's custom training die (many small cores)</td></tr>
+        <tr><td><strong>Training Tile</strong></td><td>25 D1 dies as one high-bandwidth module</td></tr>
+        <tr><td><strong>ExaPOD</strong></td><td>Full Dojo system of many cabinets</td></tr>
+        <tr><td><strong>CFP8</strong></td><td>Configurable 8-bit float datatype for training</td></tr>
+      </tbody>
+    </table>
+    <div class="callout">Dojo showed how far <strong>vertical integration</strong> can go — a car company building its own AI supercomputer — advancing tiling, dense interconnect, and custom datatypes. Yet Tesla reportedly <strong>disbanded the dedicated Dojo team in 2025</strong>, a reminder that bespoke supercomputers are hard and costly.</div>
+  </section>
+
+  <section>
+    <div class="sec-head"><div class="sec-num">5</div><h2>Summary</h2></div>
+    <div class="essence">
+      <h3>Dojo in one paragraph</h3>
+      <p>Dojo was <strong>Tesla's custom AI training supercomputer</strong>, built from its own <strong>D1 chip</strong> and scaled by tiling — <strong>25 D1 dies</strong> form a seamless <strong>Training Tile</strong>, tiles fill cabinets, and many cabinets make an <strong>ExaPOD</strong>. Connected by a high-bandwidth <strong>mesh</strong> and using a configurable <strong>CFP8</strong> datatype, it was tuned for training Tesla's <strong>video-based self-driving</strong> networks — a bold example of vertical integration, though Tesla reportedly wound the dedicated program down in 2025.</p>
+    </div>
+    <div class="twocol" style="margin-top:18px">
+      <div class="panel good"><h4>A bespoke machine fits when…</h4><ul><li>You have a <strong>single dominant workload</strong></li><li>You own <strong>enormous proprietary data</strong></li><li>You want <strong>full-stack control</strong></li><li>You can absorb the <strong>cost &amp; risk</strong></li></ul></div>
+      <div class="panel"><h4>Future trends</h4><ul><li>Tiling/mesh scaling lives on (wafer-scale)</li><li>Custom training datatypes spreading</li><li>More users exploring custom silicon — cautiously</li><li>Build-vs-buy stays a key question</li></ul></div>
+    </div>
+  </section>
+
+</main>
+
+<footer>Dojo · Tesla · VLSI Architecture Reference · <a href="index.html">Back to all architectures</a></footer>
+
+</body>
+</html>
