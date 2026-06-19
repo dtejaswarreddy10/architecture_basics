@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CPU — Central Processing Unit</title>
+<style>
+  :root{
+    --accent:#0071C5;        /* Intel blue */
+    --accent-dark:#004a85;
+    --accent-soft:#e7f1fb;
+    --ink:#16202b;
+    --muted:#5a6b7b;
+    --bg:#eef3f8;
+    --card:#ffffff;
+    --line:#d4e1ee;
+    --shadow:0 8px 24px rgba(0,40,80,.08);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;
+       color:var(--ink);background:var(--bg);line-height:1.65}
+  a{color:var(--accent);text-decoration:none}
+
+  /* ---- shell: sidebar + content ---- */
+  .shell{display:grid;grid-template-columns:260px 1fr;min-height:100vh}
+  .sidebar{position:sticky;top:0;align-self:start;height:100vh;overflow:auto;
+    background:linear-gradient(180deg,var(--accent-dark),var(--accent));color:#fff;padding:28px 22px}
+  .sidebar .brand{font-size:1.9rem;font-weight:800;letter-spacing:1px}
+  .sidebar .sub{opacity:.85;font-size:.85rem;margin-bottom:24px}
+  .sidebar a.back{display:inline-block;color:#fff;opacity:.85;font-size:.85rem;margin-bottom:26px}
+  .sidebar nav a{display:block;color:#fff;opacity:.9;padding:10px 12px;border-radius:9px;
+    font-weight:600;font-size:.95rem;margin-bottom:4px;border:1px solid transparent}
+  .sidebar nav a:hover{background:rgba(255,255,255,.15);border-color:rgba(255,255,255,.25)}
+  .sidebar .chip{margin-top:24px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.25);
+    border-radius:12px;padding:14px;font-size:.85rem}
+
+  .content{padding:40px 48px;max-width:920px}
+  .eyebrow{color:var(--accent);font-weight:700;letter-spacing:2px;text-transform:uppercase;font-size:.78rem}
+  h1.title{font-size:2.6rem;margin:.1em 0 .2em}
+  .lead{font-size:1.15rem;color:var(--muted);max-width:680px;margin-bottom:10px}
+
+  section{background:var(--card);border:1px solid var(--line);border-radius:16px;
+    padding:26px 30px;margin:22px 0;box-shadow:var(--shadow);scroll-margin-top:20px}
+  h2{font-size:1.45rem;color:var(--accent-dark);display:flex;align-items:center;gap:10px}
+  h2 .n{background:var(--accent);color:#fff;width:34px;height:34px;border-radius:9px;
+    display:grid;place-items:center;font-size:1rem}
+  h3{margin:20px 0 8px;color:var(--accent-dark);font-size:1.05rem}
+  p{margin:8px 0}
+
+  .callout{border-left:5px solid var(--accent);background:var(--accent-soft);
+    padding:14px 18px;border-radius:0 12px 12px 0;margin:16px 0;font-weight:500}
+
+  /* pipeline diagram */
+  .pipe{display:flex;flex-wrap:wrap;align-items:stretch;gap:0;margin:18px 0}
+  .stage{flex:1;min-width:110px;background:#fff;border:2px solid var(--accent);border-radius:12px;
+    padding:14px 10px;text-align:center;position:relative;margin-right:22px;margin-bottom:10px}
+  .stage:last-child{margin-right:0}
+  .stage::after{content:"▶";position:absolute;right:-19px;top:50%;transform:translateY(-50%);
+    color:var(--accent);font-size:.9rem}
+  .stage:last-child::after{content:""}
+  .stage .s{font-weight:800;color:var(--accent-dark);display:block}
+  .stage small{color:var(--muted);font-size:.78rem}
+
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;margin:18px 0}
+  .stat{background:linear-gradient(160deg,#fff,var(--accent-soft));border:1px solid var(--line);
+    border-radius:14px;padding:16px;text-align:center}
+  .stat .num{font-size:1.5rem;font-weight:800;color:var(--accent-dark)}
+  .stat .lbl{font-size:.78rem;color:var(--muted);text-transform:uppercase}
+
+  .badges{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+  .badge{background:var(--accent-soft);color:var(--accent-dark);border:1px solid var(--line);
+    padding:5px 12px;border-radius:8px;font-size:.85rem;font-weight:600}
+
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:.95rem}
+  th,td{padding:11px 14px;text-align:left;border-bottom:1px solid var(--line)}
+  thead th{background:var(--accent);color:#fff}
+  tbody tr:nth-child(even){background:var(--accent-soft)}
+  tbody tr:hover{background:#d7e8f8}
+
+  .twocol{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:16px 0}
+  .panel{border-radius:14px;padding:18px;border:1px solid var(--line)}
+  .panel.good{background:#e9f6ec}
+  .panel.bad{background:#fdeef0;border-color:#f3d2d6}
+  .panel h4{margin-bottom:8px}
+  .panel.good h4{color:#1f7a3a}
+  .panel.bad h4{color:#b13a4a}
+  .panel ul{margin-left:18px}
+
+  .essence{background:linear-gradient(135deg,var(--accent-dark),var(--accent));color:#fff;
+    border-radius:16px;padding:24px 28px;box-shadow:var(--shadow)}
+  .essence h3{color:#fff;margin-top:0}
+
+  footer{text-align:center;color:var(--muted);padding:26px;font-size:.9rem}
+  @media(max-width:820px){.shell{grid-template-columns:1fr}.sidebar{position:static;height:auto}
+    .content{padding:26px}.twocol{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <aside class="sidebar">
+    <a class="back" href="index.html">← All Architectures</a>
+    <div class="brand">CPU</div>
+    <div class="sub">Central Processing Unit</div>
+    <nav>
+      <a href="#intro">1 · Introduction</a>
+      <a href="#arch">2 · Architecture</a>
+      <a href="#apps">3 · Applications</a>
+      <a href="#market">4 · Market &amp; Future</a>
+      <a href="#summary">5 · Summary</a>
+    </nav>
+    <div class="chip">🧠 The general-purpose <strong>brain</strong> — a few powerful cores built for low-latency, sequential work.</div>
+  </aside>
+
+  <div class="content">
+    <div class="eyebrow">General-Purpose Processor</div>
+    <h1 class="title">Central Processing Unit</h1>
+    <p class="lead">The universal brain of every computer — flexible, fast at single tasks, and the conductor that orchestrates all other chips.</p>
+
+    <section id="intro">
+      <h2><span class="n">1</span> Introduction</h2>
+      <h3>What is a CPU?</h3>
+      <p>A <strong>CPU</strong> is the <strong>general-purpose brain</strong> of a computer. It runs <em>any</em> program — OS, browser, game, database — executing instructions one after another, very quickly. Think of it as <strong>one very smart person</strong> who can solve almost any problem, step by step.</p>
+      <h3>Where did CPUs come from?</h3>
+      <p>The CPU is the <strong>oldest</strong> processor type. The <strong>Intel 4004 (1971)</strong> was the first single-chip microprocessor; the <strong>von Neumann architecture (1945)</strong> — one shared memory for both instructions and data — still underlies most CPUs today.</p>
+      <h3>The main idea</h3>
+      <div class="callout">A <strong>few powerful cores</strong>, optimized for <strong>low latency</strong> and complex control — the opposite of a GPU. The CPU spends silicon being <em>smart about one instruction stream</em>.</div>
+    </section>
+
+    <section id="arch">
+      <h2><span class="n">2</span> Basic Functionality &amp; Architecture</h2>
+      <h3>Analogy: an expert craftsman</h3>
+      <p>If a GPU is a factory of thousands of workers, a CPU is <strong>one master craftsman</strong> with a huge toolbox — able to handle <em>any</em> job, but only a few at a time.</p>
+
+      <h3>The instruction cycle</h3>
+      <div class="pipe">
+        <div class="stage"><span class="s">Fetch</span><small>read instruction</small></div>
+        <div class="stage"><span class="s">Decode</span><small>interpret it</small></div>
+        <div class="stage"><span class="s">Execute</span><small>ALU math/logic</small></div>
+        <div class="stage"><span class="s">Memory</span><small>read/write data</small></div>
+        <div class="stage"><span class="s">Write-back</span><small>store result</small></div>
+      </div>
+
+      <h3>What makes CPUs fast</h3>
+      <div class="badges">
+        <span class="badge">Pipelining</span>
+        <span class="badge">Branch prediction</span>
+        <span class="badge">Out-of-order execution</span>
+        <span class="badge">Superscalar</span>
+        <span class="badge">L1 / L2 / L3 caches</span>
+      </div>
+
+      <h3>Cores, threads &amp; ISAs</h3>
+      <div class="stats">
+        <div class="stat"><div class="num">4–64</div><div class="lbl">cores</div></div>
+        <div class="stat"><div class="num">×2</div><div class="lbl">threads/core (SMT)</div></div>
+        <div class="stat"><div class="num">~100 GB/s</div><div class="lbl">DDR5 bandwidth</div></div>
+        <div class="stat"><div class="num">x86 · ARM · RISC-V</div><div class="lbl">ISAs</div></div>
+      </div>
+
+      <h3>CPU vs GPU</h3>
+      <table>
+        <thead><tr><th>Feature</th><th>CPU</th><th>GPU</th></tr></thead>
+        <tbody>
+          <tr><td>Core count</td><td>8–64</td><td>10,000+</td></tr>
+          <tr><td>Clock speed</td><td>Very high</td><td>Moderate</td></tr>
+          <tr><td>Latency</td><td>Very low</td><td>Higher</td></tr>
+          <tr><td>Control logic</td><td>Complex</td><td>Simple</td></tr>
+          <tr><td>Best at</td><td>Logic &amp; branching</td><td>Parallel math</td></tr>
+        </tbody>
+      </table>
+      <div class="callout">CPUs make <strong>decisions</strong>. GPUs crunch <strong>numbers</strong>.</div>
+    </section>
+
+    <section id="apps">
+      <h2><span class="n">3</span> Applications</h2>
+      <p>The CPU is the universal default — it runs <strong>essentially everything</strong>:</p>
+      <div class="badges">
+        <span class="badge">🖥️ Operating systems</span>
+        <span class="badge">🗄️ Databases</span>
+        <span class="badge">🌐 Web &amp; back-end</span>
+        <span class="badge">⚙️ Compilers &amp; scripting</span>
+        <span class="badge">🎛️ Orchestrating accelerators</span>
+      </div>
+      <div class="twocol">
+        <div class="panel good"><h4>✅ Great at</h4><ul><li>General-purpose logic</li><li>Low-latency single tasks</li><li>Branch-heavy control flow</li><li>Strong single-thread speed</li></ul></div>
+        <div class="panel bad"><h4>⛔ Not ideal for</h4><ul><li>Millions of identical ops → GPU</li><li>AI matrix math at scale → NPU/TPU</li><li>One fixed function → ASIC</li></ul></div>
+      </div>
+    </section>
+
+    <section id="market">
+      <h2><span class="n">4</span> Market Examples &amp; Future</h2>
+      <table>
+        <thead><tr><th>Vendor</th><th>Examples</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td>Intel</td><td>Core, Xeon</td><td>x86, long-time PC/server leader</td></tr>
+          <tr><td>AMD</td><td>Ryzen, EPYC</td><td>x86, chiplet pioneer</td></tr>
+          <tr><td>Apple</td><td>M-series</td><td>ARM SoCs, great efficiency</td></tr>
+          <tr><td>ARM</td><td>Cortex (licensed)</td><td>Most phones; rising in servers</td></tr>
+          <tr><td>RISC-V</td><td>SiFive &amp; others</td><td>Open ISA, emerging fast</td></tr>
+        </tbody>
+      </table>
+      <div class="badges">
+        <span class="badge">Chiplets</span>
+        <span class="badge">Performance + efficiency cores</span>
+        <span class="badge">CPU + accelerators on one SoC</span>
+        <span class="badge">ARM &amp; RISC-V rising</span>
+        <span class="badge">Performance-per-watt</span>
+      </div>
+    </section>
+
+    <section id="summary">
+      <h2><span class="n">5</span> Summary</h2>
+      <div class="essence">
+        <h3>CPU in one paragraph</h3>
+        <p>A CPU is the general-purpose brain of a computer: a handful of powerful cores built for <strong>low-latency, sequential, decision-heavy</strong> work. It pours silicon into pipelining, branch prediction, out-of-order execution, and deep caches so it can run <em>any</em> program well — trading raw parallel throughput for flexibility and fast single-task performance.</p>
+      </div>
+      <div class="twocol" style="margin-top:18px">
+        <div class="panel good"><h4>Choose a CPU for…</h4><ul><li>General-purpose computing</li><li>Control-heavy logic</li><li>Low-latency tasks</li><li>Orchestrating other chips</li></ul></div>
+        <div class="panel"><h4>Future trends</h4><ul><li>Chiplet scaling</li><li>Hybrid core designs</li><li>Tight accelerator integration</li><li>ARM &amp; RISC-V growth</li></ul></div>
+      </div>
+    </section>
+
+    <footer>CPU · VLSI Architecture Reference · <a href="index.html">Back to all architectures</a></footer>
+  </div>
+</div>
+</body>
+</html>
