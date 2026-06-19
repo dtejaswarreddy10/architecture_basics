@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VLSI Architectures — Reference Hub</title>
+<style>
+  :root{
+    --bg:#0d1117;
+    --bg2:#131a24;
+    --card:#161d27;
+    --ink:#e8edf4;
+    --muted:#9aa7b8;
+    --line:#243042;
+    /* architecture theme colors */
+    --gpu:#76B900; --cpu:#0071C5; --npu:#7C3AED; --tpu:#EA4335;
+    --fpga:#F59E0B; --asic:#0D9488; --dsp:#DB2777; --dpu:#4F46E5;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;
+       color:var(--ink);background:var(--bg);line-height:1.6;min-height:100vh}
+  a{text-decoration:none;color:inherit}
+
+  /* ---- hero ---- */
+  .hero{position:relative;overflow:hidden;text-align:center;padding:70px 24px 56px;
+    background:
+      radial-gradient(1200px 400px at 20% -10%,rgba(118,185,0,.18),transparent 60%),
+      radial-gradient(1000px 380px at 80% 0%,rgba(79,70,229,.20),transparent 60%),
+      radial-gradient(900px 360px at 50% 120%,rgba(234,67,53,.12),transparent 60%),
+      var(--bg)}
+  .hero::after{content:"";position:absolute;inset:0;opacity:.05;
+    background-image:linear-gradient(#fff 1px,transparent 0),linear-gradient(90deg,#fff 1px,transparent 0);
+    background-size:40px 40px;pointer-events:none}
+  .hero-inner{position:relative;z-index:1;max-width:880px;margin:0 auto}
+  .kicker{font-size:.8rem;letter-spacing:4px;text-transform:uppercase;color:var(--muted)}
+  .hero h1{font-size:2.8rem;margin:.25em 0;line-height:1.1;
+    background:linear-gradient(90deg,#76B900,#4F46E5 55%,#EA4335);
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  .hero p{color:var(--muted);font-size:1.15rem;max-width:640px;margin:0 auto}
+
+  /* ---- spectrum bar ---- */
+  .spectrum{max-width:960px;margin:34px auto 0;padding:0 24px}
+  .spectrum .bar{height:14px;border-radius:999px;
+    background:linear-gradient(90deg,var(--cpu),var(--gpu),var(--fpga),var(--npu),var(--asic))}
+  .spectrum .ends{display:flex;justify-content:space-between;color:var(--muted);
+    font-size:.82rem;margin-top:8px}
+
+  /* ---- grid ---- */
+  main{max-width:1140px;margin:0 auto;padding:46px 22px 70px}
+  .grid{display:grid;gap:20px;grid-template-columns:repeat(auto-fill,minmax(250px,1fr))}
+
+  .card{position:relative;display:block;background:var(--card);border:1px solid var(--line);
+    border-radius:18px;padding:24px 22px 22px;overflow:hidden;
+    transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease}
+  .card::before{content:"";position:absolute;top:0;left:0;right:0;height:5px;background:var(--c)}
+  .card::after{content:"";position:absolute;width:150px;height:150px;right:-50px;top:-50px;
+    border-radius:50%;background:var(--c);opacity:.12;transition:opacity .18s ease}
+  .card:hover{transform:translateY(-6px);border-color:var(--c);
+    box-shadow:0 16px 40px rgba(0,0,0,.45)}
+  .card:hover::after{opacity:.22}
+
+  .badge{display:inline-grid;place-items:center;width:54px;height:54px;border-radius:14px;
+    font-weight:800;font-size:1.05rem;color:#fff;background:var(--c);margin-bottom:14px;
+    box-shadow:0 6px 16px rgba(0,0,0,.35)}
+  .card h2{font-size:1.18rem;margin-bottom:2px}
+  .card .full{color:var(--muted);font-size:.82rem;margin-bottom:10px}
+  .card p{color:var(--muted);font-size:.9rem;min-height:60px}
+  .card .go{margin-top:12px;font-weight:700;font-size:.85rem;color:var(--c);
+    display:inline-flex;align-items:center;gap:6px}
+  .card .go span{transition:transform .18s ease}
+  .card:hover .go span{transform:translateX(4px)}
+
+  /* per-card color binding */
+  .gpu{--c:var(--gpu)} .cpu{--c:var(--cpu)} .npu{--c:var(--npu)} .tpu{--c:var(--tpu)}
+  .fpga{--c:var(--fpga)} .asic{--c:var(--asic)} .dsp{--c:var(--dsp)} .dpu{--c:var(--dpu)}
+
+  footer{text-align:center;color:var(--muted);padding:26px;font-size:.85rem;
+    border-top:1px solid var(--line)}
+  @media(max-width:640px){.hero h1{font-size:2rem}}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="kicker">VLSI · Processing Architectures</div>
+    <h1>Chip Architectures Reference</h1>
+    <p>Eight processor architectures explained — what they are, how they work, where they're used, and who builds them. Pick a card to dive in.</p>
+  </div>
+  <div class="spectrum">
+    <div class="bar"></div>
+    <div class="ends"><span>← Most flexible / general-purpose</span><span>Most efficient / specialized →</span></div>
+  </div>
+</header>
+
+<main>
+  <div class="grid">
+
+    <a class="card cpu" href="cpu.html">
+      <div class="badge">CPU</div>
+      <h2>CPU</h2>
+      <div class="full">Central Processing Unit</div>
+      <p>The general-purpose brain — a few powerful cores optimized for low-latency logic, control, and running any software.</p>
+      <span class="go">Explore <span>→</span></span>
+    </a>
+
+    <a class="card gpu" href="gpu.html">
+      <div class="badge">GPU</div>
+      <h2>GPU</h2>
+      <div class="full">Graphics Processing Unit</div>
+      <p>Thousands of simple cores for massively parallel work — born for graphics, now the backbone of AI.</p>
+      <span class="go">Explore <span>→</span></span>
+    </a>
+
+    <a class="card npu" href="npu.html">
+      <div class="badge">NPU</div>
+      <h2>NPU</h2>
+      <div class="full">Neural Processing Unit</div>
+      <p>A dedicated AI engine for neural-network math — fast, private, battery-friendly inference on phones and edge devices.</p>
+      <span class="go">Explore <span>→</span></span>
+    </a>
+
+    <a class="card tpu" href="tpu.html">
+      <div class="badge">TPU</div>
+      <h2>TPU</h2>
+      <div class="full">Tensor Processing Unit</div>
+      <p>Google's custom AI ASIC built around a systolic array — enormous matrix math at extreme efficiency, at cloud scale.</p>
+      <span class="go">Explore <span>→</span></span>
+    </a>
+
+    <a class="card fpga" href="fpga.html">
+      <div class="badge">FPGA</div>
+      <h2>FPGA</h2>
+      <div class="full">Field-Programmable Gate Array</div>
+      <p>Reconfigurable hardware you rewire into any digital circuit — low-latency, flexible, reprogrammable silicon.</p>
+      <span class="go">Explore <span>→</span></span>
+    </a>
+
+    <a class="card asic" href="asic.html">
+      <div class="badge">ASIC</div>
+      <h2>ASIC</h2>
+      <div class="full">Application-Specific IC</div>
+      <p>Custom silicon built for one job — the highest performance, lowest power, and lowest cost at massive volume.</p>
+      <span class="go">Explore <span>→</span></span>
+    </a>
+
+    <a class="card dsp" href="dsp.html">
+      <div class="badge">DSP</div>
+      <h2>DSP</h2>
+      <div class="full">Digital Signal Processor</div>
+      <p>Tuned to crunch real-world signals — audio, radio, video — in real time, built around fast multiply-accumulate.</p>
+      <span class="go">Explore <span>→</span></span>
+    </a>
+
+    <a class="card dpu" href="dpu.html">
+      <div class="badge">DPU</div>
+      <h2>DPU</h2>
+      <div class="full">Data Processing Unit</div>
+      <p>The data center's "third pillar" — offloads networking, storage, and security so the CPU is free to run apps.</p>
+      <span class="go">Explore <span>→</span></span>
+    </a>
+
+  </div>
+</main>
+
+<footer>VLSI Architecture Reference · 8 architectures · Markdown + HTML versions available for each</footer>
+
+</body>
+</html>
