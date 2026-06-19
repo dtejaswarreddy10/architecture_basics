@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WSE — Wafer-Scale Engine (Cerebras)</title>
+<style>
+  :root{
+    --accent:#EA580C;        /* Cerebras orange */
+    --accent-dark:#b8420a;
+    --accent-soft:#fde8d7;
+    --ink:#2a1709;
+    --muted:#7e6048;
+    --bg:#fff7f0;
+    --card:#ffffff;
+    --line:#f7dcc4;
+    --shadow:0 8px 24px rgba(180,70,10,.10);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;
+       color:var(--ink);background:var(--bg);line-height:1.65}
+  a{color:var(--accent-dark);text-decoration:none}
+  .topnav{position:sticky;top:0;z-index:20;display:flex;justify-content:space-between;
+    align-items:center;padding:12px 28px;background:rgba(255,255,255,.85);
+    backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+  .topnav .home{font-weight:600;color:var(--muted)}
+  .topnav .home:hover{color:var(--accent-dark)}
+  .topnav .tag{font-weight:700;color:var(--accent-dark);letter-spacing:.5px}
+  .hero{position:relative;overflow:hidden;color:#fff;padding:64px 28px 76px;
+    background:linear-gradient(120deg,var(--accent-dark),var(--accent) 75%)}
+  .hero::after{content:"";position:absolute;inset:0;opacity:.16;
+    background-image:linear-gradient(#fff 1px,transparent 0),linear-gradient(90deg,#fff 1px,transparent 0);
+    background-size:30px 30px}
+  .hero-inner{position:relative;max-width:1080px;margin:0 auto;z-index:1;
+    display:grid;grid-template-columns:1.5fr 1fr;gap:28px;align-items:center}
+  .hero .eyebrow{font-size:.8rem;letter-spacing:3px;text-transform:uppercase;opacity:.85}
+  .hero h1{font-size:3rem;margin:.2em 0 .25em;line-height:1.05}
+  .hero p{font-size:1.15rem;max-width:560px;opacity:.95}
+  .pills{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px}
+  .pill{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);
+    padding:7px 14px;border-radius:999px;font-size:.85rem;font-weight:600}
+  /* hero wafer */
+  .wafer{aspect-ratio:1;border-radius:50%;background:rgba(255,255,255,.12);
+    border:2px solid rgba(255,255,255,.4);padding:14px;display:grid;
+    grid-template-columns:repeat(12,1fr);grid-auto-rows:1fr;gap:2px;overflow:hidden;max-width:260px;margin:0 auto}
+  .wafer span{background:rgba(255,255,255,.8);border-radius:1px}
+  .wafer span:nth-child(3n){background:rgba(255,255,255,.45)}
+  main{max-width:1080px;margin:-44px auto 60px;padding:0 22px;position:relative;z-index:5}
+  section{background:var(--card);border:1px solid var(--line);border-radius:18px;
+    padding:30px 34px;margin-bottom:26px;box-shadow:var(--shadow)}
+  .sec-head{display:flex;align-items:center;gap:14px;margin-bottom:18px}
+  .sec-num{flex:0 0 auto;width:44px;height:44px;border-radius:12px;display:grid;
+    place-items:center;font-weight:800;color:#fff;background:var(--accent);font-size:1.1rem}
+  .sec-head h2{font-size:1.5rem}
+  h3{margin:22px 0 8px;font-size:1.1rem;color:var(--accent-dark)}
+  p{margin:8px 0}
+  .callout{border-left:5px solid var(--accent);background:var(--accent-soft);
+    padding:14px 18px;border-radius:0 12px 12px 0;margin:16px 0;font-weight:500}
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin:18px 0}
+  .stat{background:linear-gradient(160deg,#fff,var(--accent-soft));border:1px solid var(--line);
+    border-radius:14px;padding:16px;text-align:center}
+  .stat .num{font-size:1.6rem;font-weight:800;color:var(--accent-dark)}
+  .stat .lbl{font-size:.8rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+  .badges{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+  .badge{background:var(--accent-soft);color:var(--accent-dark);border:1px solid var(--line);
+    padding:5px 12px;border-radius:8px;font-size:.85rem;font-weight:600}
+  .twocol{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:16px 0}
+  .panel{border-radius:14px;padding:18px;border:1px solid var(--line)}
+  .panel.good{background:#fdecdd}
+  .panel.bad{background:#f5f1ec;border-color:#e6dccd}
+  .panel h4{margin-bottom:8px}
+  .panel.good h4{color:var(--accent-dark)}
+  .panel.bad h4{color:#9a6a3a}
+  .panel ul{margin-left:18px}
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:.95rem}
+  th,td{padding:11px 14px;text-align:left;border-bottom:1px solid var(--line)}
+  thead th{background:var(--accent);color:#fff}
+  tbody tr:nth-child(even){background:var(--accent-soft)}
+  tbody tr:hover{background:#fbdbc2}
+  .essence{background:linear-gradient(135deg,var(--accent-dark),var(--accent));color:#fff;
+    border-radius:16px;padding:24px 28px;margin:8px 0 4px;box-shadow:var(--shadow)}
+  .essence h3{color:#fff;margin-top:0}
+  footer{text-align:center;color:var(--muted);padding:30px;font-size:.9rem}
+  @media(max-width:760px){.hero-inner{grid-template-columns:1fr}}
+  @media(max-width:640px){.twocol{grid-template-columns:1fr}.hero h1{font-size:2.2rem}}
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <a class="home" href="index.html">← All Architectures</a>
+  <span class="tag">WSE · Cerebras</span>
+</nav>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div>
+      <div class="eyebrow">Wafer-Scale Engine · Cerebras</div>
+      <h1>WSE</h1>
+      <p>Instead of cutting a wafer into hundreds of small chips, Cerebras keeps the entire wafer as one giant chip — the largest processor ever built.</p>
+      <div class="pills">
+        <span class="pill">🟧 One whole wafer = one chip</span>
+        <span class="pill">🔢 ~900,000 cores</span>
+        <span class="pill">💾 ~44 GB on-chip SRAM</span>
+        <span class="pill">🚀 No chip-to-chip bottleneck</span>
+      </div>
+    </div>
+    <div class="wafer" aria-hidden="true">
+      <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+      <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+      <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+      <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+      <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+      <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+      <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+      <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+      <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+      <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+      <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+      <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <section>
+    <div class="sec-head"><div class="sec-num">1</div><h2>Introduction</h2></div>
+    <h3>What is the WSE?</h3>
+    <p>The <strong>WSE (Wafer-Scale Engine)</strong> from <strong>Cerebras Systems</strong> is an AI processor <strong>the size of an entire silicon wafer</strong> — roughly a dinner plate. Where a normal chip is a small rectangle cut from a wafer, the WSE is the <strong>whole wafer kept as one chip</strong>, with hundreds of thousands of cores and tens of GB of memory on one continuous piece of silicon.</p>
+    <h3>Where did it come from?</h3>
+    <p>Training huge models means <strong>splitting work across thousands of GPUs</strong> linked by slow cables. Cerebras (2015) asked: <em>what if the whole thing fit on one piece of silicon, so data never leaves the chip?</em> The first wafer-scale processor (2019) solved manufacturing problems many thought impossible.</p>
+    <h3>The main idea</h3>
+    <div class="callout">Eliminate the <strong>chip-to-chip bottleneck</strong> by never leaving the wafer — on-silicon communication is vastly faster than between separate chips, so keep <strong>enormous bandwidth and memory on-chip</strong>.</div>
+  </section>
+
+  <section>
+    <div class="sec-head"><div class="sec-num">2</div><h2>Basic Functionality &amp; Architecture</h2></div>
+    <h3>Simple analogy: one giant city vs many towns</h3>
+    <p>A GPU cluster is <strong>thousands of small towns</strong> linked by congested highways. The WSE is <strong>one massive city</strong> where everything is within walking distance — no traffic jams between chips.</p>
+
+    <h3>Wafer-scale by the numbers (WSE-3)</h3>
+    <div class="stats">
+      <div class="stat"><div class="num">~900K</div><div class="lbl">cores</div></div>
+      <div class="stat"><div class="num">~4 T</div><div class="lbl">transistors</div></div>
+      <div class="stat"><div class="num">~44 GB</div><div class="lbl">on-chip SRAM</div></div>
+      <div class="stat"><div class="num">~46,225</div><div class="lbl">mm² silicon</div></div>
+    </div>
+
+    <h3>How do you build a chip that big?</h3>
+    <div class="badges">
+      <span class="badge">Redundancy — route around defects</span>
+      <span class="badge">Cross-die interconnect over scribe lines</span>
+      <span class="badge">Custom power &amp; cooling (kilowatts)</span>
+    </div>
+    <p>The WSE is a <strong>2-D mesh</strong> of small cores, each with local SRAM. <strong>Weights are streamed</strong> across the fabric, with native support for <strong>sparsity</strong>. Scaling beyond one wafer uses <strong>MemoryX</strong> (weight storage) and <strong>SwarmX</strong> (interconnect).</p>
+
+    <h3>WSE vs GPU cluster</h3>
+    <table>
+      <thead><tr><th>Feature</th><th>GPU cluster</th><th>WSE</th></tr></thead>
+      <tbody>
+        <tr><td>Building block</td><td>Many separate chips</td><td><strong>One wafer-sized chip</strong></td></tr>
+        <tr><td>Inter-core comms</td><td>Across cables/network</td><td><strong>All on-chip (huge BW)</strong></td></tr>
+        <tr><td>Memory</td><td>Per-GPU HBM</td><td><strong>Tens of GB on-chip SRAM</strong></td></tr>
+        <tr><td>Programming</td><td>Split across GPUs</td><td><strong>Looks like one big device</strong></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <div class="sec-head"><div class="sec-num">3</div><h2>Applications</h2></div>
+    <div class="badges">
+      <span class="badge">🧠 Training very large models</span>
+      <span class="badge">⚡ Record-speed LLM inference</span>
+      <span class="badge">🔬 HPC &amp; science</span>
+      <span class="badge">🏥 Pharma / drug discovery</span>
+      <span class="badge">🛢️ Simulation</span>
+    </div>
+    <div class="twocol">
+      <div class="panel good"><h4>✅ Why pick a WSE</h4><ul><li>No chip-to-chip bottleneck</li><li>Simpler scaling vs 1000s of GPUs</li><li>Fast training &amp; inference</li><li>Strong on sparse compute</li></ul></div>
+      <div class="panel bad"><h4>⛔ Not for</h4><ul><li>Small / light workloads</li><li>Cheap incremental deploys → GPU</li><li>Tiny low-power chips → edge/NPU</li><li>Broadest ecosystem (CUDA)</li></ul></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><div class="sec-num">4</div><h2>Market Examples &amp; Future</h2></div>
+    <table>
+      <thead><tr><th>Item</th><th>Note</th></tr></thead>
+      <tbody>
+        <tr><td><strong>WSE-1 / 2 / 3</strong></td><td>Successive wafer-scale generations</td></tr>
+        <tr><td><strong>CS-3 system</strong></td><td>The appliance that houses &amp; cools the WSE</td></tr>
+        <tr><td><strong>MemoryX + SwarmX</strong></td><td>Scale to clusters of wafers, huge models</td></tr>
+        <tr><td><strong>Condor Galaxy</strong></td><td>Cerebras AI supercomputers (multi-system)</td></tr>
+      </tbody>
+    </table>
+    <div class="callout">Cerebras positions wafer-scale as a <strong>simpler, faster alternative</strong> to giant GPU clusters for frontier AI and HPC — one of the most visible <strong>non-NVIDIA AI compute</strong> providers.</div>
+  </section>
+
+  <section>
+    <div class="sec-head"><div class="sec-num">5</div><h2>Summary</h2></div>
+    <div class="essence">
+      <h3>WSE in one paragraph</h3>
+      <p>The Wafer-Scale Engine is Cerebras's radical AI chip that keeps an <strong>entire silicon wafer as one processor</strong>, integrating hundreds of thousands of cores and tens of GB of SRAM on a single piece of silicon. By never leaving the wafer it removes the chip-to-chip bottleneck that limits GPU clusters, delivering enormous on-chip bandwidth for training and fast inference of very large models — at the cost of being a specialized, data-center-class system.</p>
+    </div>
+    <div class="twocol" style="margin-top:18px">
+      <div class="panel good"><h4>Choose a WSE when…</h4><ul><li>You train/serve <strong>very large models</strong></li><li>The <strong>chip-to-chip bottleneck</strong> limits you</li><li>You want <strong>one big device</strong></li><li>You run large <strong>HPC / science</strong></li></ul></div>
+      <div class="panel"><h4>Future trends</h4><ul><li>LLM inference-speed leadership</li><li>Bigger wafer-scale clusters</li><li>Sparsity-first computing</li><li>Wafer-scale entering mainstream HPC</li></ul></div>
+    </div>
+  </section>
+
+</main>
+
+<footer>WSE · Cerebras · VLSI Architecture Reference · <a href="index.html">Back to all architectures</a></footer>
+
+</body>
+</html>
