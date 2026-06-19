@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RDU — Reconfigurable Dataflow Unit (SambaNova)</title>
+<style>
+  :root{
+    --accent:#C026D3;        /* fuchsia */
+    --accent-dark:#a21caf;
+    --accent-soft:#fbe2fe;
+    --ink:#2c0833;
+    --muted:#7a4f83;
+    --bg:#fef5ff;
+    --card:#ffffff;
+    --line:#f1cdf7;
+    --shadow:0 8px 24px rgba(162,28,175,.10);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;
+       color:var(--ink);background:var(--bg);line-height:1.65}
+  a{color:var(--accent-dark);text-decoration:none}
+  .topnav{position:sticky;top:0;z-index:20;display:flex;justify-content:space-between;
+    align-items:center;padding:12px 28px;background:rgba(255,255,255,.85);
+    backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+  .topnav .home{font-weight:600;color:var(--muted)}
+  .topnav .home:hover{color:var(--accent-dark)}
+  .topnav .tag{font-weight:700;color:var(--accent-dark);letter-spacing:.5px}
+  .hero{position:relative;overflow:hidden;color:#fff;padding:72px 28px 84px;
+    background:linear-gradient(135deg,var(--accent-dark),var(--accent) 70%)}
+  .hero::after{content:"";position:absolute;inset:0;opacity:.18;
+    background-image:radial-gradient(circle at 20% 30%,#fff 2px,transparent 3px),
+      radial-gradient(circle at 60% 70%,#fff 2px,transparent 3px),
+      radial-gradient(circle at 85% 25%,#fff 2px,transparent 3px);
+    background-size:120px 120px}
+  .hero-inner{position:relative;max-width:1080px;margin:0 auto;z-index:1}
+  .hero .eyebrow{font-size:.8rem;letter-spacing:3px;text-transform:uppercase;opacity:.85}
+  .hero h1{font-size:3rem;margin:.2em 0 .25em;line-height:1.05}
+  .hero p{font-size:1.2rem;max-width:680px;opacity:.95}
+  .pills{display:flex;flex-wrap:wrap;gap:10px;margin-top:24px}
+  .pill{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);
+    padding:7px 14px;border-radius:999px;font-size:.85rem;font-weight:600}
+  main{max-width:1080px;margin:-48px auto 60px;padding:0 22px;position:relative;z-index:5}
+  section{background:var(--card);border:1px solid var(--line);border-radius:18px;
+    padding:30px 34px;margin-bottom:26px;box-shadow:var(--shadow)}
+  .sec-head{display:flex;align-items:center;gap:14px;margin-bottom:18px}
+  .sec-num{flex:0 0 auto;width:44px;height:44px;border-radius:12px;display:grid;
+    place-items:center;font-weight:800;color:#fff;background:var(--accent);font-size:1.1rem}
+  .sec-head h2{font-size:1.5rem}
+  h3{margin:22px 0 8px;font-size:1.1rem;color:var(--accent-dark)}
+  p{margin:8px 0}
+  .callout{border-left:5px solid var(--accent);background:var(--accent-soft);
+    padding:14px 18px;border-radius:0 12px 12px 0;margin:16px 0;font-weight:500}
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin:18px 0}
+  .stat{background:linear-gradient(160deg,#fff,var(--accent-soft));border:1px solid var(--line);
+    border-radius:14px;padding:16px;text-align:center}
+  .stat .num{font-size:1.6rem;font-weight:800;color:var(--accent-dark)}
+  .stat .lbl{font-size:.8rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+  .badges{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+  .badge{background:var(--accent-soft);color:var(--accent-dark);border:1px solid var(--line);
+    padding:5px 12px;border-radius:8px;font-size:.85rem;font-weight:600}
+  .twocol{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:16px 0}
+  .panel{border-radius:14px;padding:18px;border:1px solid var(--line)}
+  .panel.good{background:#fbe2fe}
+  .panel.bad{background:#f3eef4;border-color:#e4d6e8}
+  .panel h4{margin-bottom:8px}
+  .panel.good h4{color:var(--accent-dark)}
+  .panel.bad h4{color:#7c5f84}
+  .panel ul{margin-left:18px}
+  /* signature: reconfigurable dataflow graph */
+  .graph{margin:16px 0;padding:24px 18px;border:1px dashed var(--accent);border-radius:14px;
+    background:#fdf3ff;overflow-x:auto}
+  .flowrow{display:flex;align-items:center;justify-content:center;gap:0;min-width:560px}
+  .col{display:flex;flex-direction:column;gap:14px;align-items:center}
+  .node{width:78px;height:58px;border-radius:12px;display:grid;place-items:center;
+    text-align:center;font-weight:800;font-size:.82rem;color:#fff;box-shadow:var(--shadow);
+    line-height:1.15}
+  .node small{display:block;font-size:.6rem;font-weight:600;opacity:.9;letter-spacing:.3px}
+  .node.pcu{background:linear-gradient(160deg,var(--accent),var(--accent-dark))}
+  .node.pmu{background:linear-gradient(160deg,#7c3aed,#5b21b6)}
+  .node.io{background:#3f2447}
+  .arrow{flex:0 0 auto;width:46px;height:4px;position:relative;background:var(--accent);
+    margin:0 2px;align-self:center;border-radius:2px}
+  .arrow::after{content:"";position:absolute;right:-2px;top:-5px;border:7px solid transparent;
+    border-left-color:var(--accent)}
+  .arrow.dim{background:var(--line)}
+  .arrow.dim::after{border-left-color:var(--line)}
+  .glegend{display:flex;flex-wrap:wrap;gap:16px;justify-content:center;margin-top:16px;
+    font-size:.8rem;color:var(--muted)}
+  .glegend span{display:inline-flex;align-items:center;gap:6px}
+  .key{width:14px;height:14px;border-radius:4px;display:inline-block}
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:.95rem}
+  th,td{padding:11px 14px;text-align:left;border-bottom:1px solid var(--line)}
+  thead th{background:var(--accent);color:#fff}
+  tbody tr:nth-child(even){background:var(--accent-soft)}
+  tbody tr:hover{background:#f6d3fb}
+  .essence{background:linear-gradient(135deg,var(--accent-dark),var(--accent));color:#fff;
+    border-radius:16px;padding:24px 28px;margin:8px 0 4px;box-shadow:var(--shadow)}
+  .essence h3{color:#fff;margin-top:0}
+  footer{text-align:center;color:var(--muted);padding:30px;font-size:.9rem}
+  @media(max-width:640px){.twocol{grid-template-columns:1fr}.hero h1{font-size:2.2rem}}
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <a class="home" href="index.html">← All Architectures</a>
+  <span class="tag">RDU · SambaNova</span>
+</nav>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Reconfigurable Dataflow Unit · SambaNova</div>
+    <h1>RDU</h1>
+    <p>A chip that reshapes itself to match your AI model — instead of forcing the model through fixed cores, it configures its hardware into the exact dataflow the model needs.</p>
+    <div class="pills">
+      <span class="pill">🔀 Reconfigurable Dataflow</span>
+      <span class="pill">🧩 PCUs + PMUs</span>
+      <span class="pill">🧠 Huge models, fewer chips</span>
+      <span class="pill">⚙️ SambaFlow compiler</span>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <section>
+    <div class="sec-head"><div class="sec-num">1</div><h2>Introduction</h2></div>
+    <h3>What is an RDU?</h3>
+    <p>An <strong>RDU (Reconfigurable Dataflow Unit)</strong> from <strong>SambaNova Systems</strong> is built on a <strong>Reconfigurable Dataflow Architecture (RDA)</strong>. Instead of running instructions on fixed cores like a CPU/GPU, the RDU <strong>rewires its compute and memory units</strong> to form a custom pipeline that mirrors the model's <strong>dataflow graph</strong>.</p>
+    <h3>Where did it come from?</h3>
+    <p>SambaNova (2017, founded by Stanford professors and veteran chip leaders) saw that AI models <em>are</em> dataflow graphs, yet GPUs execute them as endless kernel launches with constant memory traffic. The RDU <strong>maps the whole graph onto hardware</strong> and keeps data moving.</p>
+    <h3>The main idea</h3>
+    <div class="callout">Configure the hardware to the model, <strong>not the model to the hardware</strong>. A compiler arranges the RDU's units into the precise pipeline a model needs, so intermediate results <strong>stream between stages on-chip</strong> instead of bouncing to memory.</div>
+  </section>
+
+  <section>
+    <div class="sec-head"><div class="sec-num">2</div><h2>Basic Functionality &amp; Architecture</h2></div>
+    <h3>Simple analogy: a custom factory line per product</h3>
+    <p>A GPU is a general workshop where every part is carried back and forth to the same machines. The RDU <strong>builds a dedicated assembly line</strong> shaped like your model — each station feeds the next, so the product flows straight through.</p>
+
+    <h3>Spatial dataflow graph (the model mapped onto silicon)</h3>
+    <div class="graph">
+      <div class="flowrow">
+        <div class="col">
+          <div class="node io">IN<small>data</small></div>
+        </div>
+        <div class="arrow"></div>
+        <div class="col">
+          <div class="node pcu">PCU<small>compute</small></div>
+          <div class="node pmu">PMU<small>memory</small></div>
+        </div>
+        <div class="arrow"></div>
+        <div class="col">
+          <div class="node pmu">PMU<small>memory</small></div>
+          <div class="node pcu">PCU<small>compute</small></div>
+        </div>
+        <div class="arrow"></div>
+        <div class="col">
+          <div class="node pcu">PCU<small>compute</small></div>
+        </div>
+        <div class="arrow"></div>
+        <div class="col">
+          <div class="node io">OUT<small>result</small></div>
+        </div>
+      </div>
+      <div class="glegend">
+        <span><i class="key" style="background:linear-gradient(160deg,var(--accent),var(--accent-dark))"></i> PCU — Pattern Compute Unit</span>
+        <span><i class="key" style="background:linear-gradient(160deg,#7c3aed,#5b21b6)"></i> PMU — Pattern Memory Unit</span>
+        <span><i class="key" style="background:#3f2447"></i> I/O</span>
+      </div>
+      <p style="color:var(--muted);font-size:.85rem;margin-top:10px;text-align:center">The switching fabric wires PCUs &amp; PMUs into the model's graph — data flows through, no kernel-by-kernel memory round-trips.</p>
+    </div>
+
+    <h3>The building blocks (RDA)</h3>
+    <table>
+      <thead><tr><th>Unit</th><th>Role</th></tr></thead>
+      <tbody>
+        <tr><td><strong>PCUs — Pattern Compute Units</strong></td><td>Reconfigurable compute (matrix/vector math)</td></tr>
+        <tr><td><strong>PMUs — Pattern Memory Units</strong></td><td>Distributed on-chip memory next to compute</td></tr>
+        <tr><td><strong>Switching fabric</strong></td><td>Programmable interconnect linking PCUs &amp; PMUs</td></tr>
+        <tr><td><strong>SambaFlow</strong></td><td>Compiler that maps the dataflow graph onto the fabric</td></tr>
+      </tbody>
+    </table>
+    <div class="callout"><strong>Built for big models:</strong> a three-tier memory system with large capacity lets a single RDU system hold <strong>very large models</strong> (hundreds of billions of parameters) and <strong>long context</strong> without splitting across as many devices.</div>
+
+    <h3>RDU vs GPU</h3>
+    <table>
+      <thead><tr><th>Feature</th><th>GPU</th><th>RDU</th></tr></thead>
+      <tbody>
+        <tr><td>Execution</td><td>Instruction/kernel streams</td><td><strong>Spatial dataflow</strong></td></tr>
+        <tr><td>Adapts to model</td><td>Fixed cores</td><td><strong>Reconfigures to the graph</strong></td></tr>
+        <tr><td>Memory traffic</td><td>High (constant round-trips)</td><td><strong>Lower — on-chip streaming</strong></td></tr>
+        <tr><td>Big-model focus</td><td>Split across many GPUs</td><td><strong>Large models on fewer chips</strong></td></tr>
+        <tr><td>Software</td><td>CUDA</td><td><strong>SambaFlow</strong></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <div class="sec-head"><div class="sec-num">3</div><h2>Applications</h2></div>
+    <div class="badges">
+      <span class="badge">🧠 Large language models</span>
+      <span class="badge">📚 Long-context / huge-parameter models</span>
+      <span class="badge">🏢 Enterprise &amp; government AI</span>
+      <span class="badge">🔀 Composition of Experts</span>
+      <span class="badge">🔬 On-prem / regulated AI</span>
+    </div>
+    <div class="twocol">
+      <div class="panel good"><h4>✅ Why pick an RDU</h4><ul><li>Big models on <strong>fewer chips</strong> (large memory)</li><li><strong>Less memory overhead</strong> via dataflow</li><li>Flexible — reconfigures per model</li><li>Delivered as a <strong>turnkey system</strong></li></ul></div>
+      <div class="panel bad"><h4>⛔ Not for</h4><ul><li>General computing → CPU</li><li>Graphics → GPU</li><li>The broadest open ecosystem (CUDA)</li><li>Tiny edge / low-power → NPU</li></ul></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><div class="sec-num">4</div><h2>Market Examples &amp; Future</h2></div>
+    <table>
+      <thead><tr><th>Item</th><th>Note</th></tr></thead>
+      <tbody>
+        <tr><td><strong>SN10 / SN30 / SN40L</strong></td><td>Successive RDU generations</td></tr>
+        <tr><td><strong>DataScale systems</strong></td><td>Full racks delivered to customers</td></tr>
+        <tr><td><strong>SambaNova Suite</strong></td><td>Enterprise AI platform (models + hardware)</td></tr>
+        <tr><td><strong>SambaFlow</strong></td><td>The dataflow compiler / software stack</td></tr>
+      </tbody>
+    </table>
+    <div class="callout">SambaNova sells <strong>complete AI systems</strong> — hardware + models + software — targeting <strong>enterprises and governments</strong> that want large models run <strong>on-premise</strong>. The <strong>SN40L</strong> highlights big on-package memory to serve very large models efficiently.</div>
+  </section>
+
+  <section>
+    <div class="sec-head"><div class="sec-num">5</div><h2>Summary</h2></div>
+    <div class="essence">
+      <h3>RDU in one paragraph</h3>
+      <p>The RDU is SambaNova's AI processor built on a <strong>Reconfigurable Dataflow Architecture</strong>: a compiler arranges its <strong>Pattern Compute Units</strong> and <strong>Pattern Memory Units</strong> into a spatial pipeline shaped like the model's <strong>dataflow graph</strong>, so data streams between stages on-chip with little memory overhead. With large memory capacity it runs <strong>very large models on fewer chips</strong>, delivered as turnkey enterprise systems — distinct from the GPU's instruction-stream model.</p>
+    </div>
+    <div class="twocol" style="margin-top:18px">
+      <div class="panel good"><h4>Choose an RDU when…</h4><ul><li>You run <strong>very large models</strong> / long context</li><li>You want <strong>big models on fewer chips</strong></li><li>You prefer a <strong>turnkey on-prem system</strong></li><li>You benefit from <strong>dataflow</strong> efficiency</li></ul></div>
+      <div class="panel"><h4>Future trends</h4><ul><li>Large on-package memory for frontier models</li><li>Composition-of-Experts serving</li><li>Enterprise &amp; sovereign AI appliances</li><li>Dataflow architectures maturing</li></ul></div>
+    </div>
+  </section>
+
+</main>
+
+<footer>RDU · SambaNova · VLSI Architecture Reference · <a href="index.html">Back to all architectures</a></footer>
+
+</body>
+</html>
