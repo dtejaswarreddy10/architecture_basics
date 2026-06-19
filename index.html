@@ -15,6 +15,9 @@
     /* architecture theme colors */
     --gpu:#76B900; --cpu:#0071C5; --npu:#7C3AED; --tpu:#EA4335;
     --fpga:#F59E0B; --asic:#0D9488; --dsp:#DB2777; --dpu:#4F46E5;
+    /* emerging AI accelerators */
+    --ipu:#E11D48; --wse:#EA580C; --lpu:#0891B2; --rdu:#C026D3;
+    --gaudi:#16A34A; --aws:#475569; --dojo:#B91C1C; --mtia:#2563EB;
   }
   *{box-sizing:border-box;margin:0;padding:0}
   body{font-family:"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;
@@ -73,6 +76,20 @@
   /* per-card color binding */
   .gpu{--c:var(--gpu)} .cpu{--c:var(--cpu)} .npu{--c:var(--npu)} .tpu{--c:var(--tpu)}
   .fpga{--c:var(--fpga)} .asic{--c:var(--asic)} .dsp{--c:var(--dsp)} .dpu{--c:var(--dpu)}
+  .ipu{--c:var(--ipu)} .wse{--c:var(--wse)} .lpu{--c:var(--lpu)} .rdu{--c:var(--rdu)}
+  .gaudi{--c:var(--gaudi)} .aws{--c:var(--aws)} .dojo{--c:var(--dojo)} .mtia{--c:var(--mtia)}
+
+  /* section grouping */
+  .group{margin-top:54px}
+  .group:first-of-type{margin-top:8px}
+  .group-head{display:flex;align-items:center;gap:16px;margin:0 0 22px}
+  .group-head h2{font-size:1.4rem;white-space:nowrap}
+  .group-head .line{flex:1;height:1px;background:var(--line)}
+  .group-head .count{color:var(--muted);font-size:.82rem;border:1px solid var(--line);
+    padding:3px 10px;border-radius:999px;white-space:nowrap}
+  .group.classic h2{color:#9fd0ff}
+  .group.ai h2{color:#c9b6ff}
+  .badge.sm{font-size:.92rem}
 
   footer{text-align:center;color:var(--muted);padding:26px;font-size:.85rem;
     border-top:1px solid var(--line)}
@@ -85,7 +102,7 @@
   <div class="hero-inner">
     <div class="kicker">VLSI · Processing Architectures</div>
     <h1>Chip Architectures Reference</h1>
-    <p>Eight processor architectures explained — what they are, how they work, where they're used, and who builds them. Pick a card to dive in.</p>
+    <p>Sixteen processor architectures explained — from general-purpose CPUs to cutting-edge AI accelerators. What they are, how they work, where they're used, and who builds them. Pick a card to dive in.</p>
   </div>
   <div class="spectrum">
     <div class="bar"></div>
@@ -94,76 +111,162 @@
 </header>
 
 <main>
-  <div class="grid">
 
-    <a class="card cpu" href="cpu.html">
-      <div class="badge">CPU</div>
-      <h2>CPU</h2>
-      <div class="full">Central Processing Unit</div>
-      <p>The general-purpose brain — a few powerful cores optimized for low-latency logic, control, and running any software.</p>
-      <span class="go">Explore <span>→</span></span>
-    </a>
+  <!-- ============ GROUP 1: General-Purpose & Classic ============ -->
+  <section class="group classic">
+    <div class="group-head">
+      <h2>General-Purpose &amp; Classic</h2>
+      <span class="line"></span>
+      <span class="count">6 architectures</span>
+    </div>
+    <div class="grid">
 
-    <a class="card gpu" href="gpu.html">
-      <div class="badge">GPU</div>
-      <h2>GPU</h2>
-      <div class="full">Graphics Processing Unit</div>
-      <p>Thousands of simple cores for massively parallel work — born for graphics, now the backbone of AI.</p>
-      <span class="go">Explore <span>→</span></span>
-    </a>
+      <a class="card cpu" href="cpu.html">
+        <div class="badge">CPU</div>
+        <h2>CPU</h2>
+        <div class="full">Central Processing Unit</div>
+        <p>The general-purpose brain — a few powerful cores optimized for low-latency logic, control, and running any software.</p>
+        <span class="go">Explore <span>→</span></span>
+      </a>
 
-    <a class="card npu" href="npu.html">
-      <div class="badge">NPU</div>
-      <h2>NPU</h2>
-      <div class="full">Neural Processing Unit</div>
-      <p>A dedicated AI engine for neural-network math — fast, private, battery-friendly inference on phones and edge devices.</p>
-      <span class="go">Explore <span>→</span></span>
-    </a>
+      <a class="card gpu" href="gpu.html">
+        <div class="badge">GPU</div>
+        <h2>GPU</h2>
+        <div class="full">Graphics Processing Unit</div>
+        <p>Thousands of simple cores for massively parallel work — born for graphics, now the backbone of AI.</p>
+        <span class="go">Explore <span>→</span></span>
+      </a>
 
-    <a class="card tpu" href="tpu.html">
-      <div class="badge">TPU</div>
-      <h2>TPU</h2>
-      <div class="full">Tensor Processing Unit</div>
-      <p>Google's custom AI ASIC built around a systolic array — enormous matrix math at extreme efficiency, at cloud scale.</p>
-      <span class="go">Explore <span>→</span></span>
-    </a>
+      <a class="card fpga" href="fpga.html">
+        <div class="badge">FPGA</div>
+        <h2>FPGA</h2>
+        <div class="full">Field-Programmable Gate Array</div>
+        <p>Reconfigurable hardware you rewire into any digital circuit — low-latency, flexible, reprogrammable silicon.</p>
+        <span class="go">Explore <span>→</span></span>
+      </a>
 
-    <a class="card fpga" href="fpga.html">
-      <div class="badge">FPGA</div>
-      <h2>FPGA</h2>
-      <div class="full">Field-Programmable Gate Array</div>
-      <p>Reconfigurable hardware you rewire into any digital circuit — low-latency, flexible, reprogrammable silicon.</p>
-      <span class="go">Explore <span>→</span></span>
-    </a>
+      <a class="card asic" href="asic.html">
+        <div class="badge">ASIC</div>
+        <h2>ASIC</h2>
+        <div class="full">Application-Specific IC</div>
+        <p>Custom silicon built for one job — the highest performance, lowest power, and lowest cost at massive volume.</p>
+        <span class="go">Explore <span>→</span></span>
+      </a>
 
-    <a class="card asic" href="asic.html">
-      <div class="badge">ASIC</div>
-      <h2>ASIC</h2>
-      <div class="full">Application-Specific IC</div>
-      <p>Custom silicon built for one job — the highest performance, lowest power, and lowest cost at massive volume.</p>
-      <span class="go">Explore <span>→</span></span>
-    </a>
+      <a class="card dsp" href="dsp.html">
+        <div class="badge">DSP</div>
+        <h2>DSP</h2>
+        <div class="full">Digital Signal Processor</div>
+        <p>Tuned to crunch real-world signals — audio, radio, video — in real time, built around fast multiply-accumulate.</p>
+        <span class="go">Explore <span>→</span></span>
+      </a>
 
-    <a class="card dsp" href="dsp.html">
-      <div class="badge">DSP</div>
-      <h2>DSP</h2>
-      <div class="full">Digital Signal Processor</div>
-      <p>Tuned to crunch real-world signals — audio, radio, video — in real time, built around fast multiply-accumulate.</p>
-      <span class="go">Explore <span>→</span></span>
-    </a>
+      <a class="card dpu" href="dpu.html">
+        <div class="badge">DPU</div>
+        <h2>DPU</h2>
+        <div class="full">Data Processing Unit</div>
+        <p>The data center's "third pillar" — offloads networking, storage, and security so the CPU is free to run apps.</p>
+        <span class="go">Explore <span>→</span></span>
+      </a>
 
-    <a class="card dpu" href="dpu.html">
-      <div class="badge">DPU</div>
-      <h2>DPU</h2>
-      <div class="full">Data Processing Unit</div>
-      <p>The data center's "third pillar" — offloads networking, storage, and security so the CPU is free to run apps.</p>
-      <span class="go">Explore <span>→</span></span>
-    </a>
+    </div>
+  </section>
 
-  </div>
+  <!-- ============ GROUP 2: AI Accelerators ============ -->
+  <section class="group ai">
+    <div class="group-head">
+      <h2>AI Accelerators</h2>
+      <span class="line"></span>
+      <span class="count">10 architectures</span>
+    </div>
+    <div class="grid">
+
+      <a class="card npu" href="npu.html">
+        <div class="badge">NPU</div>
+        <h2>NPU</h2>
+        <div class="full">Neural Processing Unit</div>
+        <p>A dedicated AI engine for neural-network math — fast, private, battery-friendly inference on phones and edge devices.</p>
+        <span class="go">Explore <span>→</span></span>
+      </a>
+
+      <a class="card tpu" href="tpu.html">
+        <div class="badge">TPU</div>
+        <h2>TPU</h2>
+        <div class="full">Tensor Processing Unit</div>
+        <p>Google's custom AI ASIC built around a systolic array — enormous matrix math at extreme efficiency, at cloud scale.</p>
+        <span class="go">Explore <span>→</span></span>
+      </a>
+
+      <a class="card ipu" href="ipu.html">
+        <div class="badge">IPU</div>
+        <h2>IPU</h2>
+        <div class="full">Intelligence Processing Unit · Graphcore</div>
+        <p>Hundreds of independent tiles with huge on-chip SRAM — MIMD parallelism running models entirely on-chip.</p>
+        <span class="go">Explore <span>→</span></span>
+      </a>
+
+      <a class="card wse" href="wse.html">
+        <div class="badge sm">WSE</div>
+        <h2>WSE</h2>
+        <div class="full">Wafer-Scale Engine · Cerebras</div>
+        <p>An entire silicon wafer as one giant chip — ~900K cores and tens of GB of SRAM, no chip boundaries.</p>
+        <span class="go">Explore <span>→</span></span>
+      </a>
+
+      <a class="card lpu" href="lpu.html">
+        <div class="badge">LPU</div>
+        <h2>LPU</h2>
+        <div class="full">Language Processing Unit · Groq</div>
+        <p>Deterministic, compiler-scheduled inference — no caches or guesswork, record token-per-second speed.</p>
+        <span class="go">Explore <span>→</span></span>
+      </a>
+
+      <a class="card rdu" href="rdu.html">
+        <div class="badge">RDU</div>
+        <h2>RDU</h2>
+        <div class="full">Reconfigurable Dataflow Unit · SambaNova</div>
+        <p>Reshapes its hardware to match the model's dataflow graph — huge models on fewer chips.</p>
+        <span class="go">Explore <span>→</span></span>
+      </a>
+
+      <a class="card gaudi" href="gaudi.html">
+        <div class="badge sm">Gaudi</div>
+        <h2>Gaudi</h2>
+        <div class="full">AI Accelerator · Intel / Habana</div>
+        <p>Massive standard Ethernet (RoCE) baked onto the chip — scale to thousands of accelerators with open networking.</p>
+        <span class="go">Explore <span>→</span></span>
+      </a>
+
+      <a class="card aws" href="trainium.html">
+        <div class="badge sm">AWS</div>
+        <h2>Trainium &amp; Inferentia</h2>
+        <div class="full">Custom AI Chips · AWS</div>
+        <p>Amazon's cloud-only AI silicon — Trainium for training, Inferentia for inference — cheaper than renting GPUs.</p>
+        <span class="go">Explore <span>→</span></span>
+      </a>
+
+      <a class="card dojo" href="dojo.html">
+        <div class="badge sm">Dojo</div>
+        <h2>Dojo</h2>
+        <div class="full">AI Training Supercomputer · Tesla</div>
+        <p>Tesla's custom training machine built from D1 chips — tiled into Training Tiles and ExaPODs for video at scale.</p>
+        <span class="go">Explore <span>→</span></span>
+      </a>
+
+      <a class="card mtia" href="mtia.html">
+        <div class="badge sm">MTIA</div>
+        <h2>MTIA</h2>
+        <div class="full">Meta Training and Inference Accelerator</div>
+        <p>Meta's in-house chip — a grid of PEs tuned for the recommendation models behind Feed, Reels, and Ads.</p>
+        <span class="go">Explore <span>→</span></span>
+      </a>
+
+    </div>
+  </section>
+
 </main>
 
-<footer>VLSI Architecture Reference · 8 architectures · Markdown + HTML versions available for each</footer>
+<footer>VLSI Architecture Reference · 16 architectures · Markdown + HTML versions available for each</footer>
 
 </body>
 </html>
