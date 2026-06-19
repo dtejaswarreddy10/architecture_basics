@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LPU — Language Processing Unit (Groq)</title>
+<style>
+  :root{
+    --accent:#0891B2;        /* cyan */
+    --accent-dark:#0e6f88;
+    --accent-soft:#d8f3f9;
+    --ink:#09222a;
+    --muted:#4f6f78;
+    --bg:#f0fbfd;
+    --card:#ffffff;
+    --line:#c5eaf1;
+    --shadow:0 8px 24px rgba(10,110,130,.10);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;
+       color:var(--ink);background:var(--bg);line-height:1.65}
+  a{color:var(--accent-dark);text-decoration:none}
+  .topnav{position:sticky;top:0;z-index:20;display:flex;justify-content:space-between;
+    align-items:center;padding:12px 28px;background:rgba(255,255,255,.85);
+    backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+  .topnav .home{font-weight:600;color:var(--muted)}
+  .topnav .home:hover{color:var(--accent-dark)}
+  .topnav .tag{font-weight:700;color:var(--accent-dark);letter-spacing:.5px}
+  .hero{position:relative;overflow:hidden;color:#fff;padding:72px 28px 84px;
+    background:linear-gradient(135deg,var(--accent-dark),var(--accent) 70%)}
+  .hero::after{content:"";position:absolute;inset:0;opacity:.16;
+    background-image:repeating-linear-gradient(90deg,#fff 0 2px,transparent 2px 26px)}
+  .hero-inner{position:relative;max-width:1080px;margin:0 auto;z-index:1}
+  .hero .eyebrow{font-size:.8rem;letter-spacing:3px;text-transform:uppercase;opacity:.85}
+  .hero h1{font-size:3rem;margin:.2em 0 .25em;line-height:1.05}
+  .hero p{font-size:1.2rem;max-width:680px;opacity:.95}
+  .pills{display:flex;flex-wrap:wrap;gap:10px;margin-top:24px}
+  .pill{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);
+    padding:7px 14px;border-radius:999px;font-size:.85rem;font-weight:600}
+  main{max-width:1080px;margin:-48px auto 60px;padding:0 22px;position:relative;z-index:5}
+  section{background:var(--card);border:1px solid var(--line);border-radius:18px;
+    padding:30px 34px;margin-bottom:26px;box-shadow:var(--shadow)}
+  .sec-head{display:flex;align-items:center;gap:14px;margin-bottom:18px}
+  .sec-num{flex:0 0 auto;width:44px;height:44px;border-radius:12px;display:grid;
+    place-items:center;font-weight:800;color:#fff;background:var(--accent);font-size:1.1rem}
+  .sec-head h2{font-size:1.5rem}
+  h3{margin:22px 0 8px;font-size:1.1rem;color:var(--accent-dark)}
+  p{margin:8px 0}
+  .callout{border-left:5px solid var(--accent);background:var(--accent-soft);
+    padding:14px 18px;border-radius:0 12px 12px 0;margin:16px 0;font-weight:500}
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin:18px 0}
+  .stat{background:linear-gradient(160deg,#fff,var(--accent-soft));border:1px solid var(--line);
+    border-radius:14px;padding:16px;text-align:center}
+  .stat .num{font-size:1.6rem;font-weight:800;color:var(--accent-dark)}
+  .stat .lbl{font-size:.8rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+  .badges{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+  .badge{background:var(--accent-soft);color:var(--accent-dark);border:1px solid var(--line);
+    padding:5px 12px;border-radius:8px;font-size:.85rem;font-weight:600}
+  .twocol{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:16px 0}
+  .panel{border-radius:14px;padding:18px;border:1px solid var(--line)}
+  .panel.good{background:#dcf4fa}
+  .panel.bad{background:#eef3f4;border-color:#d6e4e8}
+  .panel h4{margin-bottom:8px}
+  .panel.good h4{color:var(--accent-dark)}
+  .panel.bad h4{color:#5f7c84}
+  .panel ul{margin-left:18px}
+  /* signature: deterministic scheduled stream */
+  .stream{margin:16px 0;padding:20px;border:1px dashed var(--accent);border-radius:14px;background:#f5fdff}
+  .clk{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
+  .clk span{flex:1;min-width:48px;text-align:center;font-size:.68rem;color:var(--muted);
+    border-bottom:2px solid var(--line);padding-bottom:3px}
+  .lane{display:flex;gap:6px;align-items:center;margin:6px 0;flex-wrap:wrap}
+  .lane .name{width:70px;font-size:.72rem;font-weight:700;color:var(--accent-dark);flex:0 0 auto}
+  .lane .op{flex:1;min-width:48px;text-align:center;border-radius:6px;padding:6px 0;font-size:.7rem;
+    font-weight:700;color:#fff;background:var(--accent)}
+  .lane .op.alt{background:var(--accent-dark)}
+  .lane .op.idle{background:var(--accent-soft);color:var(--muted)}
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:.95rem}
+  th,td{padding:11px 14px;text-align:left;border-bottom:1px solid var(--line)}
+  thead th{background:var(--accent);color:#fff}
+  tbody tr:nth-child(even){background:var(--accent-soft)}
+  tbody tr:hover{background:#c3ebf2}
+  .essence{background:linear-gradient(135deg,var(--accent-dark),var(--accent));color:#fff;
+    border-radius:16px;padding:24px 28px;margin:8px 0 4px;box-shadow:var(--shadow)}
+  .essence h3{color:#fff;margin-top:0}
+  footer{text-align:center;color:var(--muted);padding:30px;font-size:.9rem}
+  @media(max-width:640px){.twocol{grid-template-columns:1fr}.hero h1{font-size:2.2rem}}
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <a class="home" href="index.html">← All Architectures</a>
+  <span class="tag">LPU · Groq</span>
+</nav>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Language Processing Unit · Groq</div>
+    <h1>LPU</h1>
+    <p>A chip built for blazing-fast, predictable AI inference — the compiler schedules every operation in advance, so there's no guesswork and no waiting.</p>
+    <div class="pills">
+      <span class="pill">⚡ Record token speed</span>
+      <span class="pill">⏱️ Deterministic latency</span>
+      <span class="pill">🧮 Tensor Streaming Processor</span>
+      <span class="pill">🚫 No caches / no scheduler</span>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <section>
+    <div class="sec-head"><div class="sec-num">1</div><h2>Introduction</h2></div>
+    <h3>What is an LPU?</h3>
+    <p>An <strong>LPU (Language Processing Unit)</strong> from <strong>Groq</strong> runs large language models with <strong>extremely low, predictable latency</strong> — generating tokens at record speed. Its architecture is the <strong>TSP (Tensor Streaming Processor)</strong>. A GPU decides <em>at runtime</em> what each core does; an LPU decides <em>at compile time</em> — <strong>everything is pre-planned</strong>.</p>
+    <h3>Where did it come from?</h3>
+    <p>Groq (2016, founded by <strong>Jonathan Ross</strong>, who helped create Google's TPU) targeted the biggest pain in serving LLMs: <strong>inconsistent latency</strong>. GPUs are fast on average but jittery because caches and schedulers make timing variable. Groq's answer: <strong>remove all nondeterminism</strong>.</p>
+    <h3>The main idea</h3>
+    <div class="callout">Make the hardware perfectly predictable by letting <strong>software schedule everything</strong> — no caches, no branch prediction, no dynamic scheduling. The compiler maps exactly which op runs on which unit at which <strong>cycle</strong>.</div>
+  </section>
+
+  <section>
+    <div class="sec-head"><div class="sec-num">2</div><h2>Basic Functionality &amp; Architecture</h2></div>
+    <h3>Simple analogy: a choreographed dance</h3>
+    <p>A GPU is a busy kitchen where chefs improvise and sometimes collide. The LPU is a <strong>perfectly choreographed dance</strong> — every move planned in advance, so it runs at full speed with <strong>no collisions and no waiting</strong>.</p>
+
+    <h3>Compiler-scheduled streaming (every cycle planned)</h3>
+    <div class="stream">
+      <div class="clk"><span>cyc 1</span><span>cyc 2</span><span>cyc 3</span><span>cyc 4</span><span>cyc 5</span><span>cyc 6</span></div>
+      <div class="lane"><span class="name">Matrix</span><span class="op">MM</span><span class="op alt">MM</span><span class="op">MM</span><span class="op idle">·</span><span class="op">MM</span><span class="op alt">MM</span></div>
+      <div class="lane"><span class="name">Vector</span><span class="op idle">·</span><span class="op">add</span><span class="op alt">act</span><span class="op">add</span><span class="op alt">act</span><span class="op idle">·</span></div>
+      <div class="lane"><span class="name">Memory</span><span class="op alt">ld</span><span class="op">ld</span><span class="op idle">·</span><span class="op alt">st</span><span class="op">ld</span><span class="op">ld</span></div>
+      <p style="color:var(--muted);font-size:.85rem;margin-top:10px">The compiler lays out every unit's work, cycle by cycle — the hardware just executes the plan.</p>
+    </div>
+
+    <h3>What Groq removed (on purpose)</h3>
+    <table>
+      <thead><tr><th>Typical CPU/GPU feature</th><th>LPU</th></tr></thead>
+      <tbody>
+        <tr><td>Caches</td><td>❌ removed — direct on-chip SRAM</td></tr>
+        <tr><td>Branch prediction</td><td>❌ removed</td></tr>
+        <tr><td>Out-of-order scheduling</td><td>❌ removed</td></tr>
+        <tr><td><strong>Result</strong></td><td>✅ <strong>Fully deterministic timing</strong></td></tr>
+      </tbody>
+    </table>
+    <div class="callout"><strong>Deterministic = fast and scalable:</strong> exact timing lets Groq chain many chips and still predict behavior perfectly — a big reason for its high <strong>tokens-per-second</strong>.</div>
+
+    <h3>LPU vs GPU (inference)</h3>
+    <table>
+      <thead><tr><th>Feature</th><th>GPU</th><th>LPU</th></tr></thead>
+      <tbody>
+        <tr><td>Scheduling</td><td>Dynamic (runtime)</td><td><strong>Static (compiler)</strong></td></tr>
+        <tr><td>Latency</td><td>Fast but variable</td><td><strong>Low &amp; deterministic</strong></td></tr>
+        <tr><td>Caches</td><td>Yes</td><td><strong>None — direct SRAM</strong></td></tr>
+        <tr><td>Best at</td><td>Training + inference</td><td><strong>Fast LLM inference</strong></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <div class="sec-head"><div class="sec-num">3</div><h2>Applications</h2></div>
+    <div class="badges">
+      <span class="badge">💬 Real-time LLM inference</span>
+      <span class="badge">⚡ Low-latency token generation</span>
+      <span class="badge">🔌 AI APIs (GroqCloud)</span>
+      <span class="badge">🏢 Latency-critical enterprise AI</span>
+    </div>
+    <div class="twocol">
+      <div class="panel good"><h4>✅ Why pick an LPU</h4><ul><li>Lowest, most predictable latency</li><li>Record token-generation speed</li><li>Deterministic → easy SLAs</li><li>Efficient multi-chip scaling</li></ul></div>
+      <div class="panel bad"><h4>⛔ Not for</h4><ul><li>Large-scale training → GPU/TPU/WSE</li><li>General computing → CPU</li><li>Graphics → GPU</li><li>Non-inference workloads</li></ul></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><div class="sec-num">4</div><h2>Market Examples &amp; Future</h2></div>
+    <table>
+      <thead><tr><th>Item</th><th>Note</th></tr></thead>
+      <tbody>
+        <tr><td><strong>GroqChip (TSP)</strong></td><td>The LPU silicon — deterministic streaming processor</td></tr>
+        <tr><td><strong>GroqCard / GroqNode</strong></td><td>Cards &amp; systems for the data center</td></tr>
+        <tr><td><strong>GroqCloud</strong></td><td>Cloud API delivering very fast LLM inference</td></tr>
+        <tr><td><strong>Groq Compiler</strong></td><td>Does the heavy lifting — schedules everything</td></tr>
+      </tbody>
+    </table>
+    <div class="callout">Groq made headlines generating <strong>hundreds of tokens per second</strong>, far faster than typical GPU inference — positioning the LPU as the chip for the <strong>inference era</strong> of AI.</div>
+  </section>
+
+  <section>
+    <div class="sec-head"><div class="sec-num">5</div><h2>Summary</h2></div>
+    <div class="essence">
+      <h3>LPU in one paragraph</h3>
+      <p>The LPU is Groq's AI inference processor, built on a <strong>Tensor Streaming Processor</strong> that removes caches, branch prediction, and dynamic scheduling so the <strong>compiler can plan every operation cycle-by-cycle</strong>. This makes timing fully <strong>deterministic</strong>, delivering the lowest, most predictable latency and record token-generation speeds for LLMs — specialized for inference, not training.</p>
+    </div>
+    <div class="twocol" style="margin-top:18px">
+      <div class="panel good"><h4>Choose an LPU when…</h4><ul><li>You serve <strong>LLMs</strong> needing fast replies</li><li><strong>Latency</strong> is critical</li><li>You want <strong>deterministic</strong> performance</li><li>You're in the <strong>inference</strong> phase</li></ul></div>
+      <div class="panel"><h4>Future trends</h4><ul><li>The "inference era" suits the LPU</li><li>Ever-higher tokens-per-second</li><li>Deterministic large-scale systems</li><li>Fast, cheap cloud inference</li></ul></div>
+    </div>
+  </section>
+
+</main>
+
+<footer>LPU · Groq · VLSI Architecture Reference · <a href="index.html">Back to all architectures</a></footer>
+
+</body>
+</html>
