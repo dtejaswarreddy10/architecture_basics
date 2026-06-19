@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trainium &amp; Inferentia — AWS AI Chips</title>
+<style>
+  :root{
+    --accent:#475569;        /* slate */
+    --accent-dark:#334155;
+    --accent-soft:#e2e8f0;
+    --ink:#1e293b;
+    --muted:#64748b;
+    --bg:#f6f8fb;
+    --card:#ffffff;
+    --line:#d8e0ea;
+    --train:#EA580C;         /* training accent */
+    --infer:#0891B2;         /* inference accent */
+    --shadow:0 8px 24px rgba(51,65,85,.10);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;
+       color:var(--ink);background:var(--bg);line-height:1.65}
+  a{color:var(--accent-dark);text-decoration:none}
+  .topnav{position:sticky;top:0;z-index:20;display:flex;justify-content:space-between;
+    align-items:center;padding:12px 28px;background:rgba(255,255,255,.85);
+    backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+  .topnav .home{font-weight:600;color:var(--muted)}
+  .topnav .home:hover{color:var(--accent-dark)}
+  .topnav .tag{font-weight:700;color:var(--accent-dark);letter-spacing:.5px}
+  .hero{position:relative;overflow:hidden;color:#fff;padding:72px 28px 84px;
+    background:linear-gradient(135deg,#1e293b,var(--accent) 75%)}
+  .hero::after{content:"";position:absolute;inset:0;opacity:.14;
+    background-image:radial-gradient(circle at 25% 35%,#fff 1.5px,transparent 2px);
+    background-size:30px 30px}
+  .hero-inner{position:relative;max-width:1080px;margin:0 auto;z-index:1}
+  .hero .eyebrow{font-size:.8rem;letter-spacing:3px;text-transform:uppercase;opacity:.85}
+  .hero h1{font-size:2.7rem;margin:.2em 0 .25em;line-height:1.05}
+  .hero p{font-size:1.2rem;max-width:700px;opacity:.95}
+  .pills{display:flex;flex-wrap:wrap;gap:10px;margin-top:24px}
+  .pill{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.32);
+    padding:7px 14px;border-radius:999px;font-size:.85rem;font-weight:600}
+  main{max-width:1080px;margin:-48px auto 60px;padding:0 22px;position:relative;z-index:5}
+  section{background:var(--card);border:1px solid var(--line);border-radius:18px;
+    padding:30px 34px;margin-bottom:26px;box-shadow:var(--shadow)}
+  .sec-head{display:flex;align-items:center;gap:14px;margin-bottom:18px}
+  .sec-num{flex:0 0 auto;width:44px;height:44px;border-radius:12px;display:grid;
+    place-items:center;font-weight:800;color:#fff;background:var(--accent);font-size:1.1rem}
+  .sec-head h2{font-size:1.5rem}
+  h3{margin:22px 0 8px;font-size:1.1rem;color:var(--accent-dark)}
+  p{margin:8px 0}
+  .callout{border-left:5px solid var(--accent);background:var(--accent-soft);
+    padding:14px 18px;border-radius:0 12px 12px 0;margin:16px 0;font-weight:500}
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin:18px 0}
+  .stat{background:linear-gradient(160deg,#fff,var(--accent-soft));border:1px solid var(--line);
+    border-radius:14px;padding:16px;text-align:center}
+  .stat .num{font-size:1.6rem;font-weight:800;color:var(--accent-dark)}
+  .stat .lbl{font-size:.8rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+  .badges{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+  .badge{background:var(--accent-soft);color:var(--accent-dark);border:1px solid var(--line);
+    padding:5px 12px;border-radius:8px;font-size:.85rem;font-weight:600}
+  .twocol{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:16px 0}
+  .panel{border-radius:14px;padding:18px;border:1px solid var(--line)}
+  .panel.good{background:#e2e8f0}
+  .panel.bad{background:#f1f3f6;border-color:#e0e6ee}
+  .panel h4{margin-bottom:8px}
+  .panel.good h4{color:var(--accent-dark)}
+  .panel.bad h4{color:#6b7686}
+  .panel ul{margin-left:18px}
+  /* signature: two chips (train vs infer) under the cloud */
+  .aws{margin:16px 0;padding:24px 18px;border:1px dashed var(--accent);border-radius:14px;
+    background:#eef2f7}
+  .cloud{max-width:340px;margin:0 auto 8px;text-align:center;background:var(--accent-dark);
+    color:#fff;font-weight:800;padding:12px 20px;border-radius:999px;box-shadow:var(--shadow);
+    letter-spacing:.5px}
+  .stems{display:flex;justify-content:center;gap:160px;height:22px}
+  .stems span{width:3px;background:var(--line)}
+  .duo{display:grid;grid-template-columns:1fr 1fr;gap:18px;max-width:560px;margin:0 auto}
+  .achip{border-radius:14px;padding:16px;color:#fff;box-shadow:var(--shadow);text-align:center}
+  .achip.t{background:linear-gradient(160deg,var(--train),#b8420a)}
+  .achip.i{background:linear-gradient(160deg,var(--infer),#0e6f88)}
+  .achip h4{font-size:1.05rem;margin-bottom:2px}
+  .achip .role{font-size:.74rem;opacity:.9;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px}
+  .cores{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-top:8px}
+  .cores i{height:16px;border-radius:4px;background:rgba(255,255,255,.85)}
+  .achip .cap{font-size:.72rem;opacity:.92;margin-top:9px}
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:.95rem}
+  th,td{padding:11px 14px;text-align:left;border-bottom:1px solid var(--line)}
+  thead th{background:var(--accent);color:#fff}
+  tbody tr:nth-child(even){background:var(--accent-soft)}
+  tbody tr:hover{background:#cdd8e6}
+  .essence{background:linear-gradient(135deg,var(--accent-dark),var(--accent));color:#fff;
+    border-radius:16px;padding:24px 28px;margin:8px 0 4px;box-shadow:var(--shadow)}
+  .essence h3{color:#fff;margin-top:0}
+  footer{text-align:center;color:var(--muted);padding:30px;font-size:.9rem}
+  @media(max-width:640px){.twocol{grid-template-columns:1fr}.hero h1{font-size:2rem}.stems{gap:90px}}
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <a class="home" href="index.html">← All Architectures</a>
+  <span class="tag">Trainium &amp; Inferentia · AWS</span>
+</nav>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Custom AI Silicon · Amazon Web Services</div>
+    <h1>Trainium &amp; Inferentia</h1>
+    <p>Amazon's own AI chips, available only in AWS — two complementary processors: Trainium for training, Inferentia for inference — built to cut the cost of cloud AI versus renting GPUs.</p>
+    <div class="pills">
+      <span class="pill">🏋️ Trainium = training</span>
+      <span class="pill">⚡ Inferentia = inference</span>
+      <span class="pill">☁️ AWS-only</span>
+      <span class="pill">💰 Lower cost vs GPUs</span>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <section>
+    <div class="sec-head"><div class="sec-num">1</div><h2>Introduction</h2></div>
+    <h3>What are Trainium &amp; Inferentia?</h3>
+    <p>They are <strong>custom AI ASICs designed by Amazon (AWS)</strong>: <strong>Inferentia</strong> is optimized for <strong>inference</strong> (running trained models cheaply), and <strong>Trainium</strong> is optimized for <strong>training</strong> (building &amp; fine-tuning models). You don't buy them — you <strong>rent them as AWS instances</strong>.</p>
+    <h3>Where did they come from?</h3>
+    <p>After acquiring <strong>Annapurna Labs</strong> (2015), Amazon built a custom-silicon program (also behind <strong>Nitro</strong> and <strong>Graviton</strong>). As GPUs grew scarce and costly, AWS built <strong>its own AI chips</strong> to control cost, supply, and efficiency.</p>
+    <h3>The main idea</h3>
+    <div class="callout">Split the AI lifecycle into <strong>two specialized chips</strong> and run them only in AWS. By owning the silicon, AWS tailors the chips to its data centers and offers <strong>better price/performance</strong> than general-purpose GPUs for many workloads.</div>
+  </section>
+
+  <section>
+    <div class="sec-head"><div class="sec-num">2</div><h2>Basic Functionality &amp; Architecture</h2></div>
+    <h3>Simple analogy: a gym vs a stadium</h3>
+    <p><strong>Training (Trainium)</strong> is the <strong>gym</strong> — intense, heavy work to <em>build</em> the athlete (the model). <strong>Inference (Inferentia)</strong> is the <strong>stadium</strong> — the trained athlete now <em>performs</em>, over and over, efficiently. Two jobs → two chips.</p>
+
+    <h3>Two chips, one cloud</h3>
+    <div class="aws">
+      <div class="cloud">☁️ AWS CLOUD</div>
+      <div class="stems"><span></span><span></span></div>
+      <div class="duo">
+        <div class="achip t">
+          <h4>Trainium</h4>
+          <div class="role">Training · Trn1 / Trn2</div>
+          <div class="cores"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+          <div class="cap">NeuronCores · UltraClusters</div>
+        </div>
+        <div class="achip i">
+          <h4>Inferentia</h4>
+          <div class="role">Inference · Inf1 / Inf2</div>
+          <div class="cores"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+          <div class="cap">NeuronCores · high throughput</div>
+        </div>
+      </div>
+      <p style="color:var(--muted);font-size:.85rem;margin-top:14px;text-align:center">Both built on <strong>NeuronCores</strong>, linked by <strong>NeuronLink</strong>, programmed via the <strong>AWS Neuron SDK</strong> (PyTorch / JAX).</p>
+    </div>
+
+    <h3>The building blocks</h3>
+    <table>
+      <thead><tr><th>Element</th><th>Role</th></tr></thead>
+      <tbody>
+        <tr><td><strong>NeuronCores</strong></td><td>The compute engines inside each chip (tensor math)</td></tr>
+        <tr><td><strong>On-chip memory</strong></td><td>Fast local memory feeding the cores</td></tr>
+        <tr><td><strong>NeuronLink</strong></td><td>High-speed interconnect to gang many chips together</td></tr>
+        <tr><td><strong>AWS Neuron SDK</strong></td><td>Compiles PyTorch/JAX models to the chips</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Training vs Inference chips</h3>
+    <table>
+      <thead><tr><th>Feature</th><th>Inferentia</th><th>Trainium</th></tr></thead>
+      <tbody>
+        <tr><td>Job</td><td><strong>Run</strong> trained models</td><td><strong>Train</strong> / fine-tune models</td></tr>
+        <tr><td>Optimized for</td><td>Low-cost, high-throughput serving</td><td>Large-scale training</td></tr>
+        <tr><td>Instances</td><td><strong>Inf1 / Inf2</strong></td><td><strong>Trn1 / Trn2</strong></td></tr>
+        <tr><td>Scaling</td><td>Serve many requests</td><td><strong>UltraClusters</strong> of thousands</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <div class="sec-head"><div class="sec-num">3</div><h2>Applications</h2></div>
+    <div class="badges">
+      <span class="badge">🏋️ Trainium — training &amp; fine-tuning LLMs</span>
+      <span class="badge">⚡ Inferentia — chatbots, search, vision</span>
+      <span class="badge">☁️ AWS-native AI at scale</span>
+      <span class="badge">💰 Cost-sensitive deployments</span>
+      <span class="badge">🤝 Frontier model training</span>
+    </div>
+    <div class="twocol">
+      <div class="panel good"><h4>✅ Why pick them</h4><ul><li><strong>Cheaper</strong> than GPUs for many AWS workloads</li><li><strong>Massive scale</strong> via UltraClusters</li><li><strong>Managed</strong> — integrated into AWS</li><li>Two chips tuned to the <strong>two phases</strong> of AI</li></ul></div>
+      <div class="panel bad"><h4>⛔ Not for</h4><ul><li>Use <strong>outside AWS</strong> — cloud-only</li><li>General computing → CPU / Graviton</li><li>Graphics → GPU</li><li>Widest framework ecosystem (CUDA)</li></ul></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><div class="sec-num">4</div><h2>Market Examples &amp; Future</h2></div>
+    <table>
+      <thead><tr><th>Item</th><th>Note</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Inferentia / Inferentia2</strong></td><td>Inference chips → Inf1 / Inf2 instances</td></tr>
+        <tr><td><strong>Trainium / Trainium2</strong></td><td>Training chips → Trn1 / Trn2 instances</td></tr>
+        <tr><td><strong>NeuronLink</strong></td><td>Chip-to-chip interconnect for scaling</td></tr>
+        <tr><td><strong>UltraClusters</strong></td><td>Tens of thousands of chips networked together</td></tr>
+        <tr><td><strong>AWS Neuron SDK</strong></td><td>Compiler + runtime (PyTorch / JAX)</td></tr>
+      </tbody>
+    </table>
+    <div class="callout">These chips let AWS offer AI compute <strong>without relying solely on NVIDIA</strong>, improving <strong>cost and supply</strong>. AWS has highlighted very large <strong>Trainium clusters</strong> for frontier training — notably with <strong>Anthropic</strong> (e.g. <em>Project Rainier</em>).</div>
+  </section>
+
+  <section>
+    <div class="sec-head"><div class="sec-num">5</div><h2>Summary</h2></div>
+    <div class="essence">
+      <h3>Trainium &amp; Inferentia in one paragraph</h3>
+      <p>Trainium and Inferentia are <strong>Amazon's custom AI ASICs</strong>, available <strong>only on AWS</strong>: <strong>Inferentia</strong> is tuned for cheap, high-throughput <strong>inference</strong>, while <strong>Trainium</strong> targets large-scale <strong>training</strong>. Built around <strong>NeuronCores</strong>, linked by <strong>NeuronLink</strong> into <strong>UltraClusters</strong>, and programmed through the <strong>AWS Neuron SDK</strong>, they give cloud customers a <strong>lower-cost, supply-controlled alternative to GPUs</strong> for both phases of the AI lifecycle.</p>
+    </div>
+    <div class="twocol" style="margin-top:18px">
+      <div class="panel good"><h4>Choose them when…</h4><ul><li>You run AI <strong>on AWS</strong></li><li>You want <strong>lower cost</strong> than GPU instances</li><li>You need <strong>training</strong> or <strong>inference</strong> specifically</li><li>You scale to <strong>thousands of chips</strong></li></ul></div>
+      <div class="panel"><h4>Future trends</h4><ul><li>More hyperscaler custom AI chips</li><li>Larger training UltraClusters</li><li>Better price/performance each generation</li><li>Deeper framework integration</li></ul></div>
+    </div>
+  </section>
+
+</main>
+
+<footer>Trainium &amp; Inferentia · AWS · VLSI Architecture Reference · <a href="index.html">Back to all architectures</a></footer>
+
+</body>
+</html>
