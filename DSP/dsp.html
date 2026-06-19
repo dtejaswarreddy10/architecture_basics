@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DSP — Digital Signal Processor</title>
+<style>
+  :root{
+    --accent:#DB2777;        /* magenta */
+    --accent-dark:#a31a5b;
+    --accent-soft:#fce7f1;
+    --ink:#26121c;
+    --muted:#7c5567;
+    --bg:#fdf4f8;
+    --card:#ffffff;
+    --line:#f6d4e4;
+    --shadow:0 8px 24px rgba(160,20,90,.10);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;
+       color:var(--ink);background:var(--bg);line-height:1.65}
+  a{color:var(--accent-dark);text-decoration:none}
+
+  /* ---- top nav ---- */
+  .topnav{position:sticky;top:0;z-index:20;display:flex;justify-content:space-between;
+    align-items:center;padding:12px 28px;background:rgba(255,255,255,.85);
+    backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+  .topnav .home{font-weight:600;color:var(--muted)}
+  .topnav .home:hover{color:var(--accent-dark)}
+  .topnav .tag{font-weight:700;color:var(--accent-dark);letter-spacing:.5px}
+
+  /* ---- hero with waveform ---- */
+  .hero{position:relative;overflow:hidden;color:#fff;padding:72px 28px 96px;
+    background:linear-gradient(135deg,var(--accent-dark),var(--accent) 70%)}
+  .hero-inner{position:relative;max-width:1080px;margin:0 auto;z-index:2}
+  .hero .eyebrow{font-size:.8rem;letter-spacing:3px;text-transform:uppercase;opacity:.85}
+  .hero h1{font-size:3rem;margin:.2em 0 .25em;line-height:1.05}
+  .hero p{font-size:1.2rem;max-width:680px;opacity:.95}
+  .pills{display:flex;flex-wrap:wrap;gap:10px;margin-top:24px}
+  .pill{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);
+    padding:7px 14px;border-radius:999px;font-size:.85rem;font-weight:600}
+  /* waveform svg pinned to bottom of hero */
+  .wave{position:absolute;left:0;right:0;bottom:-1px;width:100%;height:70px;z-index:1;opacity:.9}
+
+  /* ---- layout ---- */
+  main{max-width:1080px;margin:-48px auto 60px;padding:0 22px;position:relative;z-index:5}
+  section{background:var(--card);border:1px solid var(--line);border-radius:18px;
+    padding:30px 34px;margin-bottom:26px;box-shadow:var(--shadow)}
+  .sec-head{display:flex;align-items:center;gap:14px;margin-bottom:18px}
+  .sec-num{flex:0 0 auto;width:44px;height:44px;border-radius:12px;display:grid;
+    place-items:center;font-weight:800;color:#fff;background:var(--accent);font-size:1.1rem}
+  .sec-head h2{font-size:1.5rem}
+  h3{margin:22px 0 8px;font-size:1.1rem;color:var(--accent-dark)}
+  p{margin:8px 0}
+
+  /* ---- callout ---- */
+  .callout{border-left:5px solid var(--accent);background:var(--accent-soft);
+    padding:14px 18px;border-radius:0 12px 12px 0;margin:16px 0;font-weight:500}
+
+  /* ---- card grid ---- */
+  .grid{display:grid;gap:16px;margin:16px 0}
+  .grid.c2{grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+  .card{border:1px solid var(--line);border-radius:14px;padding:18px;background:#fff}
+  .card h4{color:var(--accent-dark);margin-bottom:6px;font-size:1rem}
+
+  /* ---- stat tiles ---- */
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin:18px 0}
+  .stat{background:linear-gradient(160deg,#fff,var(--accent-soft));border:1px solid var(--line);
+    border-radius:14px;padding:16px;text-align:center}
+  .stat .num{font-size:1.6rem;font-weight:800;color:var(--accent-dark)}
+  .stat .lbl{font-size:.8rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+
+  /* ---- badges ---- */
+  .badges{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+  .badge{background:var(--accent-soft);color:var(--accent-dark);border:1px solid var(--line);
+    padding:5px 12px;border-radius:8px;font-size:.85rem;font-weight:600}
+
+  /* ---- two-col good/bad ---- */
+  .twocol{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:16px 0}
+  .panel{border-radius:14px;padding:18px;border:1px solid var(--line)}
+  .panel.good{background:#fce9f1}
+  .panel.bad{background:#f5f0f2;border-color:#e6d6dd}
+  .panel h4{margin-bottom:8px}
+  .panel.good h4{color:var(--accent-dark)}
+  .panel.bad h4{color:#9a5a73}
+  .panel ul{margin-left:18px}
+
+  /* ---- MAC datapath (DSP signature visual) ---- */
+  .mac{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;
+    margin:18px 0;padding:24px 18px;border:1px dashed var(--accent);border-radius:14px;background:#fff8fb}
+  .mac-box{background:#fff;border:2px solid var(--accent);border-radius:10px;padding:12px 16px;
+    text-align:center;min-width:78px}
+  .mac-box .op{font-size:1.4rem;font-weight:800;color:var(--accent-dark);line-height:1}
+  .mac-box .lbl{font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:3px}
+  .mac-box.acc{background:var(--accent);border-color:var(--accent-dark)}
+  .mac-box.acc .op,.mac-box.acc .lbl{color:#fff}
+  .mac-arrow{font-size:1.5rem;color:var(--accent-dark);font-weight:800}
+  .mac-in{display:flex;flex-direction:column;gap:8px}
+  .mac-in span{background:var(--accent-soft);border:1px solid var(--line);border-radius:7px;
+    padding:5px 12px;font-weight:700;color:var(--accent-dark);font-size:.85rem}
+
+  /* ---- table ---- */
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:.95rem}
+  th,td{padding:11px 14px;text-align:left;border-bottom:1px solid var(--line)}
+  thead th{background:var(--accent);color:#fff}
+  tbody tr:nth-child(even){background:var(--accent-soft)}
+  tbody tr:hover{background:#f9d3e5}
+
+  /* ---- highlight summary box ---- */
+  .essence{background:linear-gradient(135deg,var(--accent-dark),var(--accent));color:#fff;
+    border-radius:16px;padding:24px 28px;margin:8px 0 4px;box-shadow:var(--shadow)}
+  .essence h3{color:#fff;margin-top:0}
+
+  footer{text-align:center;color:var(--muted);padding:30px;font-size:.9rem}
+  @media(max-width:640px){.twocol{grid-template-columns:1fr}.hero h1{font-size:2.2rem}}
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <a class="home" href="index.html">← All Architectures</a>
+  <span class="tag">DSP</span>
+</nav>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Digital Signal Processor</div>
+    <h1>DSP</h1>
+    <p>A processor tuned to crunch real-world signals — audio, radio, video — in real time, built around one super-fast operation: multiply-and-accumulate.</p>
+    <div class="pills">
+      <span class="pill">🎚️ Signal math</span>
+      <span class="pill">⏱️ Real-time &amp; deterministic</span>
+      <span class="pill">✖️ Single-cycle MAC</span>
+      <span class="pill">🔋 Low power</span>
+    </div>
+  </div>
+  <svg class="wave" viewBox="0 0 1440 70" preserveAspectRatio="none" aria-hidden="true">
+    <path d="M0,35 C60,5 120,65 180,35 C240,5 300,65 360,35 C420,5 480,65 540,35 C600,5 660,65 720,35 C780,5 840,65 900,35 C960,5 1020,65 1080,35 C1140,5 1200,65 1260,35 C1320,5 1380,65 1440,35 L1440,70 L0,70 Z" fill="#fdf4f8"/>
+  </svg>
+</header>
+
+<main>
+
+  <!-- 1 -->
+  <section>
+    <div class="sec-head"><div class="sec-num">1</div><h2>Introduction</h2></div>
+    <h3>What is a DSP?</h3>
+    <p>A <strong>DSP (Digital Signal Processor)</strong> is a specialized microprocessor <strong>optimized for math on signals</strong> — continuous streams like <strong>sound, radio waves, images, and sensor readings</strong>. It applies mathematical operations (filtering, transforms) to these streams <strong>extremely fast and in real time</strong>. A CPU is built for general logic; a DSP is built for <strong>repetitive math on streaming data</strong>.</p>
+
+    <h3>Where did DSPs come from?</h3>
+    <p>DSPs arose in the <strong>late 1970s–80s</strong> when engineers needed to process signals <strong>digitally</strong> instead of with bulky analog circuits. Early wins were <strong>modems, digital telephony, and audio</strong>. Texas Instruments' <strong>TMS320</strong> family (1983) made DSPs mainstream.</p>
+
+    <h3>The main idea behind DSP design</h3>
+    <div class="callout">Do <strong>multiply-accumulate (MAC)</strong> as fast as physically possible — the whole architecture (memory, datapath, instructions) is shaped around streaming data through MAC units without stalls.</div>
+  </section>
+
+  <!-- 2 -->
+  <section>
+    <div class="sec-head"><div class="sec-num">2</div><h2>Basic Functionality &amp; Architecture</h2></div>
+
+    <h3>Simple analogy: an assembly line for signals</h3>
+    <p>A DSP is a <strong>conveyor belt</strong> where samples flow in one end, get multiplied and summed at each station, and stream out the other end — continuously, predictably, with no pauses.</p>
+
+    <h3>The core operation: Multiply-Accumulate</h3>
+    <div class="mac">
+      <div class="mac-in">
+        <span>x[n] sample</span>
+        <span>h[k] coeff</span>
+      </div>
+      <span class="mac-arrow">→</span>
+      <div class="mac-box"><div class="op">×</div><div class="lbl">multiply</div></div>
+      <span class="mac-arrow">→</span>
+      <div class="mac-box acc"><div class="op">+ Σ</div><div class="lbl">accumulate</div></div>
+      <span class="mac-arrow">→</span>
+      <div class="mac-box"><div class="op">y[n]</div><div class="lbl">output</div></div>
+    </div>
+    <p style="color:var(--muted);font-size:.9rem">One MAC per clock cycle (often several in parallel). This single pattern — a <strong>FIR filter</strong> — appears everywhere in signal processing.</p>
+
+    <h3>What makes a DSP special</h3>
+    <table>
+      <thead><tr><th>Feature</th><th>Why it matters</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Single-cycle MAC</strong></td><td>Filters &amp; transforms run at full speed</td></tr>
+        <tr><td><strong>Harvard architecture</strong></td><td>Separate program &amp; data buses → fetch both at once</td></tr>
+        <tr><td><strong>Hardware loops</strong></td><td>Zero-overhead repetition of inner loops</td></tr>
+        <tr><td><strong>Circular buffers</strong></td><td>Stream sample windows without moving data</td></tr>
+        <tr><td><strong>SIMD / VLIW</strong></td><td>Process many samples per instruction</td></tr>
+        <tr><td><strong>Saturating fixed-point</strong></td><td>Predictable behavior for audio/control</td></tr>
+      </tbody>
+    </table>
+    <div class="badges">
+      <span class="badge">Fixed-point — low power, high volume</span>
+      <span class="badge">Floating-point — wide range, high-end</span>
+    </div>
+
+    <h3>DSP vs CPU</h3>
+    <table>
+      <thead><tr><th>Feature</th><th>CPU</th><th>DSP</th></tr></thead>
+      <tbody>
+        <tr><td>Optimized for</td><td>General logic &amp; control</td><td><strong>Streaming signal math</strong></td></tr>
+        <tr><td>Key operation</td><td>Branch / load / store</td><td><strong>Multiply-accumulate</strong></td></tr>
+        <tr><td>Memory model</td><td>Von Neumann (shared)</td><td><strong>Harvard (separate)</strong></td></tr>
+        <tr><td>Timing</td><td>Best-effort</td><td><strong>Real-time, deterministic</strong></td></tr>
+        <tr><td>Loops</td><td>Software overhead</td><td><strong>Zero-overhead hardware loops</strong></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- 3 -->
+  <section>
+    <div class="sec-head"><div class="sec-num">3</div><h2>Applications</h2></div>
+    <h3>Where DSPs are everywhere</h3>
+    <div class="badges">
+      <span class="badge">🎧 Audio &amp; hearing aids</span>
+      <span class="badge">📱 Mobile / 5G baseband</span>
+      <span class="badge">📡 Communications</span>
+      <span class="badge">🎥 Image &amp; video</span>
+      <span class="badge">🚗 Automotive radar</span>
+      <span class="badge">🏥 Medical imaging</span>
+      <span class="badge">🎙️ Voice front-ends</span>
+    </div>
+    <div class="twocol">
+      <div class="panel good"><h4>✅ DSP over CPU when</h4><ul><li>Real-time guarantees on streams</li><li>Far better power efficiency</li><li>Single-cycle MAC &amp; streaming memory</li><li>Cheaper than CPU+GPU for signals</li></ul></div>
+      <div class="panel bad"><h4>⛔ Not good at</h4><ul><li>General computing / UIs → CPU</li><li>Large-model AI throughput → GPU/TPU</li><li>Complex branching / OS → CPU</li><li>Non-signal-shaped tasks</li></ul></div>
+    </div>
+  </section>
+
+  <!-- 4 -->
+  <section>
+    <div class="sec-head"><div class="sec-num">4</div><h2>Market Examples &amp; Future</h2></div>
+    <h3>The major players</h3>
+    <table>
+      <thead><tr><th>Vendor</th><th>DSP / note</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Texas Instruments</strong></td><td>TMS320 (C5000, C6000) — the classic DSP line</td></tr>
+        <tr><td><strong>Qualcomm</strong></td><td>Hexagon DSP — inside Snapdragon (audio, sensors, AI)</td></tr>
+        <tr><td><strong>CEVA</strong></td><td>Licensable DSP IP cores (widely embedded)</td></tr>
+        <tr><td><strong>Analog Devices</strong></td><td>SHARC, Blackfin — audio &amp; industrial</td></tr>
+        <tr><td><strong>Cadence (Tensilica)</strong></td><td>Embedded DSP cores</td></tr>
+      </tbody>
+    </table>
+    <div class="callout"><strong>DSP ↔ AI convergence:</strong> DSP MAC arrays look a lot like AI accelerators, so modern DSPs increasingly do <strong>edge AI / TinyML</strong>. Qualcomm's Hexagon evolved from a pure DSP into an <strong>AI engine</strong> — the line between DSP and NPU is blurring.</div>
+    <div class="stats">
+      <div class="stat"><div class="num">1983</div><div class="lbl">TI TMS320</div></div>
+      <div class="stat"><div class="num">Always-on</div><div class="lbl">ultra-low power</div></div>
+      <div class="stat"><div class="num">In every SoC</div><div class="lbl">embedded DSP cores</div></div>
+    </div>
+  </section>
+
+  <!-- 5 -->
+  <section>
+    <div class="sec-head"><div class="sec-num">5</div><h2>Summary</h2></div>
+    <div class="essence">
+      <h3>DSP in one paragraph</h3>
+      <p>A DSP is a processor <strong>built to crunch real-world signals in real time</strong>, organized entirely around the <strong>multiply-accumulate</strong> operation. With single-cycle MACs, Harvard memory, hardware loops, and deterministic timing, it filters and transforms audio, radio, and sensor data far more efficiently than a general CPU. Today DSP cores live inside almost every SoC and are steadily merging with AI engines for low-power edge inference.</p>
+    </div>
+    <div class="twocol" style="margin-top:18px">
+      <div class="panel good"><h4>Choose a DSP when…</h4><ul><li>You process <strong>continuous signals</strong> in real time</li><li>You need <strong>deterministic timing</strong> &amp; low power</li><li>The work is <strong>MAC-heavy</strong> (filters, FFTs)</li><li>It's <strong>embedded / always-on</strong></li></ul></div>
+      <div class="panel"><h4>Future trends</h4><ul><li>DSP + AI convergence (TinyML)</li><li>Always-on, ultra-low-power blocks</li><li>DSP cores embedded in every SoC</li><li>Vector DSPs blurring into NPUs</li></ul></div>
+    </div>
+  </section>
+
+</main>
+
+<footer>DSP · VLSI Architecture Reference · <a href="index.html">Back to all architectures</a></footer>
+
+</body>
+</html>
