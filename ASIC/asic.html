@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ASIC — Application-Specific Integrated Circuit</title>
+<style>
+  :root{
+    --accent:#0D9488;        /* teal */
+    --accent-dark:#0a6e65;
+    --accent-soft:#defaf5;
+    --ink:#10211f;
+    --muted:#5a716d;
+    --bg:#f1fbf9;
+    --card:#ffffff;
+    --line:#cdede8;
+    --shadow:0 8px 24px rgba(10,90,80,.10);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;
+       color:var(--ink);background:var(--bg);line-height:1.65}
+  a{color:var(--accent-dark);text-decoration:none}
+
+  /* ---- top nav ---- */
+  .topnav{position:sticky;top:0;z-index:20;display:flex;justify-content:space-between;
+    align-items:center;padding:12px 28px;background:rgba(255,255,255,.85);
+    backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+  .topnav .home{font-weight:600;color:var(--muted)}
+  .topnav .home:hover{color:var(--accent-dark)}
+  .topnav .tag{font-weight:700;color:var(--accent-dark);letter-spacing:.5px}
+
+  /* ---- hero ---- */
+  .hero{position:relative;overflow:hidden;color:#fff;padding:72px 28px 84px;
+    background:linear-gradient(135deg,var(--accent-dark),var(--accent) 70%)}
+  .hero::after{content:"";position:absolute;inset:0;opacity:.16;
+    background-image:repeating-linear-gradient(0deg,transparent,transparent 16px,#fff 16px,#fff 17px),
+      repeating-linear-gradient(90deg,transparent,transparent 16px,#fff 16px,#fff 17px)}
+  .hero-inner{position:relative;max-width:1080px;margin:0 auto;z-index:1}
+  .hero .eyebrow{font-size:.8rem;letter-spacing:3px;text-transform:uppercase;opacity:.85}
+  .hero h1{font-size:3rem;margin:.2em 0 .25em;line-height:1.05}
+  .hero p{font-size:1.2rem;max-width:680px;opacity:.95}
+  .pills{display:flex;flex-wrap:wrap;gap:10px;margin-top:24px}
+  .pill{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);
+    padding:7px 14px;border-radius:999px;font-size:.85rem;font-weight:600}
+
+  /* ---- layout ---- */
+  main{max-width:1080px;margin:-48px auto 60px;padding:0 22px;position:relative;z-index:5}
+  section{background:var(--card);border:1px solid var(--line);border-radius:18px;
+    padding:30px 34px;margin-bottom:26px;box-shadow:var(--shadow)}
+  .sec-head{display:flex;align-items:center;gap:14px;margin-bottom:18px}
+  .sec-num{flex:0 0 auto;width:44px;height:44px;border-radius:12px;display:grid;
+    place-items:center;font-weight:800;color:#fff;background:var(--accent);font-size:1.1rem}
+  .sec-head h2{font-size:1.5rem}
+  h3{margin:22px 0 8px;font-size:1.1rem;color:var(--accent-dark)}
+  p{margin:8px 0}
+
+  /* ---- magazine two-column text ---- */
+  .mag{column-count:2;column-gap:32px;margin:8px 0}
+  .mag p{margin:0 0 10px}
+  @media(max-width:680px){.mag{column-count:1}}
+
+  /* ---- callout ---- */
+  .callout{border-left:5px solid var(--accent);background:var(--accent-soft);
+    padding:14px 18px;border-radius:0 12px 12px 0;margin:16px 0;font-weight:500}
+  .callout.warn{border-color:#e0792b;background:#fdf0e3}
+
+  /* ---- card grid ---- */
+  .grid{display:grid;gap:16px;margin:16px 0}
+  .grid.c2{grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+  .grid.c3{grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}
+  .card{border:1px solid var(--line);border-radius:14px;padding:18px;background:#fff}
+  .card h4{color:var(--accent-dark);margin-bottom:6px;font-size:1rem}
+
+  /* ---- stat tiles ---- */
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin:18px 0}
+  .stat{background:linear-gradient(160deg,#fff,var(--accent-soft));border:1px solid var(--line);
+    border-radius:14px;padding:16px;text-align:center}
+  .stat .num{font-size:1.6rem;font-weight:800;color:var(--accent-dark)}
+  .stat .lbl{font-size:.8rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+
+  /* ---- badges ---- */
+  .badges{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+  .badge{background:var(--accent-soft);color:var(--accent-dark);border:1px solid var(--line);
+    padding:5px 12px;border-radius:8px;font-size:.85rem;font-weight:600}
+
+  /* ---- two-col good/bad ---- */
+  .twocol{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:16px 0}
+  .panel{border-radius:14px;padding:18px;border:1px solid var(--line)}
+  .panel.good{background:#def8f3}
+  .panel.bad{background:#f3f1ee;border-color:#e2dcd2}
+  .panel h4{margin-bottom:8px}
+  .panel.good h4{color:var(--accent-dark)}
+  .panel.bad h4{color:#9a6a3a}
+  .panel ul{margin-left:18px}
+
+  /* ---- fab flow timeline (ASIC signature visual) ---- */
+  .fab{display:flex;align-items:flex-start;gap:0;margin:20px 0;overflow-x:auto;padding-bottom:6px}
+  .fab-step{flex:1;min-width:108px;text-align:center;position:relative;padding:0 6px}
+  .fab-step .dot{width:34px;height:34px;border-radius:50%;background:var(--accent);color:#fff;
+    display:grid;place-items:center;margin:0 auto 8px;font-weight:800;font-size:.85rem;
+    border:3px solid #fff;box-shadow:0 0 0 2px var(--accent)}
+  .fab-step:not(:last-child)::after{content:"";position:absolute;top:17px;left:50%;width:100%;
+    height:3px;background:var(--accent-soft)}
+  .fab-step .dot, .fab-step h4, .fab-step p{position:relative;z-index:1}
+  .fab-step h4{font-size:.85rem;color:var(--accent-dark);margin:0}
+  .fab-step p{font-size:.72rem;color:var(--muted);margin:2px 0 0}
+  .fab-step.final .dot{background:#e0792b;box-shadow:0 0 0 2px #e0792b}
+
+  /* ---- table ---- */
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:.95rem}
+  th,td{padding:11px 14px;text-align:left;border-bottom:1px solid var(--line)}
+  thead th{background:var(--accent);color:#fff}
+  tbody tr:nth-child(even){background:var(--accent-soft)}
+  tbody tr:hover{background:#c7f0e9}
+
+  /* ---- highlight summary box ---- */
+  .essence{background:linear-gradient(135deg,var(--accent-dark),var(--accent));color:#fff;
+    border-radius:16px;padding:24px 28px;margin:8px 0 4px;box-shadow:var(--shadow)}
+  .essence h3{color:#fff;margin-top:0}
+
+  footer{text-align:center;color:var(--muted);padding:30px;font-size:.9rem}
+  @media(max-width:640px){.twocol{grid-template-columns:1fr}.hero h1{font-size:2.2rem}}
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <a class="home" href="index.html">← All Architectures</a>
+  <span class="tag">ASIC</span>
+</nav>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Application-Specific Integrated Circuit</div>
+    <h1>ASIC</h1>
+    <p>A chip designed to do one job perfectly — custom silicon that trades all flexibility for the highest speed, efficiency, and lowest cost at scale.</p>
+    <div class="pills">
+      <span class="pill">🎯 One fixed function</span>
+      <span class="pill">⚡ Highest efficiency</span>
+      <span class="pill">💰 Lowest cost at volume</span>
+      <span class="pill">🔒 Frozen at tape-out</span>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <!-- 1 -->
+  <section>
+    <div class="sec-head"><div class="sec-num">1</div><h2>Introduction</h2></div>
+    <h3>What is an ASIC?</h3>
+    <p>An <strong>ASIC (Application-Specific Integrated Circuit)</strong> is a chip <strong>custom-designed for a single purpose</strong>. Unlike a CPU (runs any software) or an FPGA (reprogrammable), an ASIC's function is <strong>permanently etched into the silicon</strong> at the factory and can never change.</p>
+    <div class="badges">
+      <span class="badge">CPU/GPU = general-purpose</span>
+      <span class="badge">FPGA = reconfigurable</span>
+      <span class="badge">ASIC = fixed &amp; optimal</span>
+    </div>
+
+    <h3>Where did ASICs come from?</h3>
+    <p>As electronics matured, high-volume products needed chips <strong>smaller, faster, cheaper, and lower-power</strong> than general processors. Building <strong>dedicated silicon</strong> for one function (a modem, a switch, a Bitcoin miner) delivers unbeatable efficiency — <em>if</em> you make enough to justify the huge design cost.</p>
+
+    <h3>The main idea behind ASIC design</h3>
+    <div class="callout">Remove everything unnecessary; optimize everything that remains. Hard-wiring one function gives the <strong>best performance-per-watt and lowest per-unit cost</strong> of any chip type.</div>
+  </section>
+
+  <!-- 2 -->
+  <section>
+    <div class="sec-head"><div class="sec-num">2</div><h2>Basic Functionality &amp; Architecture</h2></div>
+
+    <h3>Simple analogy: a custom-built tool</h3>
+    <div class="mag">
+      <p>A CPU is a <strong>Swiss Army knife</strong> — versatile but compromised. An ASIC is a <strong>purpose-built tool</strong> — a single perfect key cut for one lock. It does nothing else, but it does that one thing better than anything general-purpose.</p>
+      <p>There's no fixed template inside — the architecture is <strong>whatever the application needs</strong>: custom logic blocks, licensed processor cores (ARM/RISC-V), SRAM, I/O, analog blocks, and reused IP — all sized and placed for <strong>one specific workload</strong>.</p>
+    </div>
+
+    <h3>How an ASIC is made — the design flow</h3>
+    <div class="fab" aria-hidden="true">
+      <div class="fab-step"><div class="dot">1</div><h4>Spec</h4><p>Define the function</p></div>
+      <div class="fab-step"><div class="dot">2</div><h4>RTL</h4><p>Verilog / VHDL</p></div>
+      <div class="fab-step"><div class="dot">3</div><h4>Verify</h4><p>Simulate exhaustively</p></div>
+      <div class="fab-step"><div class="dot">4</div><h4>Synthesis</h4><p>RTL → netlist</p></div>
+      <div class="fab-step"><div class="dot">5</div><h4>Place &amp; Route</h4><p>Lay out transistors</p></div>
+      <div class="fab-step final"><div class="dot">6</div><h4>Tape-out</h4><p>Send to the fab</p></div>
+      <div class="fab-step"><div class="dot">7</div><h4>Fab</h4><p>Manufacture wafers</p></div>
+    </div>
+    <div class="callout warn"><strong>Tape-out is final.</strong> A mistake means re-spinning the chip — costing <strong>millions</strong> and months.</div>
+
+    <h3>Standard-cell vs full-custom</h3>
+    <div class="badges">
+      <span class="badge">Standard-cell — pre-built logic cells (common)</span>
+      <span class="badge">Full-custom — hand-crafted transistors (rare)</span>
+    </div>
+
+    <h3>ASIC vs FPGA</h3>
+    <table>
+      <thead><tr><th>Feature</th><th>ASIC</th><th>FPGA</th></tr></thead>
+      <tbody>
+        <tr><td>Function</td><td><strong>Fixed forever</strong></td><td>Reprogrammable</td></tr>
+        <tr><td>Performance / efficiency</td><td><strong>Highest</strong></td><td>High</td></tr>
+        <tr><td>Power</td><td><strong>Lowest</strong></td><td>Higher</td></tr>
+        <tr><td>Upfront cost (NRE)</td><td><strong>Very high ($M+)</strong></td><td>Low</td></tr>
+        <tr><td>Per-unit cost (volume)</td><td><strong>Lowest</strong></td><td>Higher</td></tr>
+        <tr><td>Time to market</td><td>Slow</td><td><strong>Fast</strong></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- 3 -->
+  <section>
+    <div class="sec-head"><div class="sec-num">3</div><h2>Applications</h2></div>
+    <h3>Where ASICs dominate</h3>
+    <div class="badges">
+      <span class="badge">₿ Crypto mining</span>
+      <span class="badge">🌐 Networking (Broadcom)</span>
+      <span class="badge">📱 Phone SoCs (Apple, Snapdragon)</span>
+      <span class="badge">🧠 AI accelerators (TPU)</span>
+      <span class="badge">📺 Consumer electronics</span>
+      <span class="badge">🚗 Automotive</span>
+    </div>
+    <div class="twocol">
+      <div class="panel good"><h4>✅ Why choose an ASIC</h4><ul><li>Maximum performance for the task</li><li>Lowest power consumption</li><li>Lowest cost per chip at volume</li><li>Smallest area — more per wafer</li></ul></div>
+      <div class="panel bad"><h4>⛔ Not good at</h4><ul><li>Any change — frozen at tape-out</li><li>Low volumes (NRE too high) → FPGA</li><li>Fast time-to-market</li><li>Evolving standards → FPGA/CPU</li></ul></div>
+    </div>
+  </section>
+
+  <!-- 4 -->
+  <section>
+    <div class="sec-head"><div class="sec-num">4</div><h2>Market Examples &amp; Future</h2></div>
+    <h3>Who designs &amp; builds ASICs</h3>
+    <table>
+      <thead><tr><th>Role</th><th>Examples</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Fabless designers</strong></td><td>Apple, Broadcom, Qualcomm, Google (TPU), Bitmain</td></tr>
+        <tr><td><strong>Foundries (fabs)</strong></td><td>TSMC, Samsung, Intel Foundry, GlobalFoundries</td></tr>
+        <tr><td><strong>EDA tools</strong></td><td>Synopsys, Cadence, Siemens EDA</td></tr>
+        <tr><td><strong>IP providers</strong></td><td>ARM, RISC-V vendors, Synopsys IP</td></tr>
+      </tbody>
+    </table>
+    <div class="callout"><strong>The economics:</strong> ASICs make sense only at <strong>scale</strong> — NRE (design, masks, verification) can reach <strong>tens of millions</strong>, but per-unit cost becomes tiny across millions of chips.</div>
+    <div class="stats">
+      <div class="stat"><div class="num">$10M+</div><div class="lbl">typical NRE</div></div>
+      <div class="stat"><div class="num">Chiplets</div><div class="lbl">reusable dies</div></div>
+      <div class="stat"><div class="num">3D ICs</div><div class="lbl">stacked packaging</div></div>
+    </div>
+  </section>
+
+  <!-- 5 -->
+  <section>
+    <div class="sec-head"><div class="sec-num">5</div><h2>Summary</h2></div>
+    <div class="essence">
+      <h3>ASIC in one paragraph</h3>
+      <p>An ASIC is a chip <strong>custom-designed and permanently fabricated for a single application</strong>. By removing all general-purpose overhead, it achieves the <strong>highest performance, lowest power, and lowest per-unit cost</strong> of any architecture — at the price of enormous upfront cost and zero flexibility once made. It powers phones, networking, crypto mining, and purpose-built AI chips like Google's TPU.</p>
+    </div>
+    <div class="twocol" style="margin-top:18px">
+      <div class="panel good"><h4>Choose an ASIC when…</h4><ul><li>You ship <strong>very high volumes</strong></li><li>You need <strong>maximum efficiency</strong></li><li>The <strong>design is stable</strong></li><li><strong>Per-unit cost</strong> beats upfront cost</li></ul></div>
+      <div class="panel"><h4>Future trends</h4><ul><li>AI-specific ASICs proliferating</li><li>Chiplet-based design &amp; 3D stacking</li><li>Domain-specific accelerators</li><li>Advanced packaging for performance</li></ul></div>
+    </div>
+  </section>
+
+</main>
+
+<footer>ASIC · VLSI Architecture Reference · <a href="index.html">Back to all architectures</a></footer>
+
+</body>
+</html>
