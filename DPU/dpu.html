@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DPU — Data Processing Unit</title>
+<style>
+  :root{
+    --accent:#4F46E5;        /* indigo */
+    --accent-dark:#3730a3;
+    --accent-soft:#e9e8fc;
+    --ink:#16162b;
+    --muted:#5f5f7d;
+    --bg:#f4f4fd;
+    --card:#ffffff;
+    --line:#dedcf7;
+    --shadow:0 8px 24px rgba(40,30,140,.10);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;
+       color:var(--ink);background:var(--bg);line-height:1.65}
+  a{color:var(--accent-dark);text-decoration:none}
+
+  /* ---- top nav ---- */
+  .topnav{position:sticky;top:0;z-index:20;display:flex;justify-content:space-between;
+    align-items:center;padding:12px 28px;background:rgba(255,255,255,.85);
+    backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+  .topnav .home{font-weight:600;color:var(--muted)}
+  .topnav .home:hover{color:var(--accent-dark)}
+  .topnav .tag{font-weight:700;color:var(--accent-dark);letter-spacing:.5px}
+
+  /* ---- hero ---- */
+  .hero{position:relative;overflow:hidden;color:#fff;padding:72px 28px 84px;
+    background:linear-gradient(135deg,var(--accent-dark),var(--accent) 70%)}
+  .hero::after{content:"";position:absolute;inset:0;opacity:.18;
+    background-image:radial-gradient(circle at 1px 1px,#fff 1.5px,transparent 0);
+    background-size:24px 24px}
+  .hero-inner{position:relative;max-width:1080px;margin:0 auto;z-index:1}
+  .hero .eyebrow{font-size:.8rem;letter-spacing:3px;text-transform:uppercase;opacity:.85}
+  .hero h1{font-size:3rem;margin:.2em 0 .25em;line-height:1.05}
+  .hero p{font-size:1.2rem;max-width:680px;opacity:.95}
+  .pills{display:flex;flex-wrap:wrap;gap:10px;margin-top:24px}
+  .pill{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);
+    padding:7px 14px;border-radius:999px;font-size:.85rem;font-weight:600}
+
+  /* ---- layout ---- */
+  main{max-width:1080px;margin:-48px auto 60px;padding:0 22px;position:relative;z-index:5}
+  section{background:var(--card);border:1px solid var(--line);border-radius:18px;
+    padding:30px 34px;margin-bottom:26px;box-shadow:var(--shadow)}
+  .sec-head{display:flex;align-items:center;gap:14px;margin-bottom:18px}
+  .sec-num{flex:0 0 auto;width:44px;height:44px;border-radius:12px;display:grid;
+    place-items:center;font-weight:800;color:#fff;background:var(--accent);font-size:1.1rem}
+  .sec-head h2{font-size:1.5rem}
+  h3{margin:22px 0 8px;font-size:1.1rem;color:var(--accent-dark)}
+  p{margin:8px 0}
+
+  /* ---- callout ---- */
+  .callout{border-left:5px solid var(--accent);background:var(--accent-soft);
+    padding:14px 18px;border-radius:0 12px 12px 0;margin:16px 0;font-weight:500}
+
+  /* ---- three pillars ---- */
+  .pillars{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:16px 0}
+  .pillar{border:1px solid var(--line);border-radius:14px;padding:18px;text-align:center;background:#fff}
+  .pillar .ic{font-size:1.6rem}
+  .pillar h4{margin:6px 0 2px;color:var(--accent-dark)}
+  .pillar p{font-size:.85rem;color:var(--muted);margin:0}
+  .pillar.me{background:linear-gradient(160deg,#fff,var(--accent-soft));border-color:var(--accent)}
+
+  /* ---- card grid ---- */
+  .grid{display:grid;gap:16px;margin:16px 0}
+  .grid.c2{grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+  .card{border:1px solid var(--line);border-radius:14px;padding:18px;background:#fff}
+  .card h4{color:var(--accent-dark);margin-bottom:6px;font-size:1rem}
+
+  /* ---- stat tiles ---- */
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin:18px 0}
+  .stat{background:linear-gradient(160deg,#fff,var(--accent-soft));border:1px solid var(--line);
+    border-radius:14px;padding:16px;text-align:center}
+  .stat .num{font-size:1.6rem;font-weight:800;color:var(--accent-dark)}
+  .stat .lbl{font-size:.8rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+
+  /* ---- badges ---- */
+  .badges{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+  .badge{background:var(--accent-soft);color:var(--accent-dark);border:1px solid var(--line);
+    padding:5px 12px;border-radius:8px;font-size:.85rem;font-weight:600}
+
+  /* ---- two-col good/bad ---- */
+  .twocol{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:16px 0}
+  .panel{border-radius:14px;padding:18px;border:1px solid var(--line)}
+  .panel.good{background:#ecebfb}
+  .panel.bad{background:#f2f1f5;border-color:#dddae8}
+  .panel h4{margin-bottom:8px}
+  .panel.good h4{color:var(--accent-dark)}
+  .panel.bad h4{color:#6a6a86}
+  .panel ul{margin-left:18px}
+
+  /* ---- offload flow diagram (DPU signature visual) ---- */
+  .offload{margin:18px 0;padding:22px;border:1px dashed var(--accent);border-radius:14px;
+    background:#fafaff;display:grid;grid-template-columns:1fr auto 1fr;gap:16px;align-items:center}
+  .node{border-radius:12px;padding:16px;text-align:center;border:2px solid var(--accent)}
+  .node.host{background:#fff}
+  .node.dpu{background:var(--accent);color:#fff;border-color:var(--accent-dark)}
+  .node h4{margin:0 0 6px;font-size:1rem}
+  .node.host h4{color:var(--accent-dark)}
+  .node small{display:block;font-size:.78rem;opacity:.85;margin-top:2px}
+  .offload .arrow{font-size:1.6rem;color:var(--accent-dark);font-weight:800;text-align:center}
+  .tasklist{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+  .tasklist span{background:rgba(255,255,255,.2);border-radius:6px;padding:3px 8px;font-size:.78rem;font-weight:600}
+
+  /* ---- table ---- */
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:.95rem}
+  th,td{padding:11px 14px;text-align:left;border-bottom:1px solid var(--line)}
+  thead th{background:var(--accent);color:#fff}
+  tbody tr:nth-child(even){background:var(--accent-soft)}
+  tbody tr:hover{background:#dcd9fa}
+
+  /* ---- highlight summary box ---- */
+  .essence{background:linear-gradient(135deg,var(--accent-dark),var(--accent));color:#fff;
+    border-radius:16px;padding:24px 28px;margin:8px 0 4px;box-shadow:var(--shadow)}
+  .essence h3{color:#fff;margin-top:0}
+
+  footer{text-align:center;color:var(--muted);padding:30px;font-size:.9rem}
+  @media(max-width:640px){.twocol,.pillars{grid-template-columns:1fr}.hero h1{font-size:2.2rem}
+    .offload{grid-template-columns:1fr}.offload .arrow{transform:rotate(90deg)}}
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <a class="home" href="index.html">← All Architectures</a>
+  <span class="tag">DPU</span>
+</nav>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Data Processing Unit</div>
+    <h1>DPU</h1>
+    <p>The "third pillar" of the data center — a chip that offloads networking, storage, and security from the CPU so the CPU is free to run applications.</p>
+    <div class="pills">
+      <span class="pill">🏛️ Third pillar of computing</span>
+      <span class="pill">🌐 Network · 💾 Storage · 🔐 Security</span>
+      <span class="pill">🧩 ARM cores + accelerators</span>
+      <span class="pill">☁️ Data-center scale</span>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <!-- 1 -->
+  <section>
+    <div class="sec-head"><div class="sec-num">1</div><h2>Introduction</h2></div>
+    <h3>What is a DPU?</h3>
+    <p>A <strong>DPU (Data Processing Unit)</strong> is a programmable processor built to handle the <strong>infrastructure work</strong> of a data center — <strong>moving, storing, and securing data</strong> — instead of running user applications. It takes over the "plumbing" that would otherwise <strong>steal CPU cycles</strong>.</p>
+    <div class="pillars">
+      <div class="pillar"><div class="ic">🧠</div><h4>CPU</h4><p>Runs the applications</p></div>
+      <div class="pillar"><div class="ic">⚡</div><h4>GPU</h4><p>Accelerates the math</p></div>
+      <div class="pillar me"><div class="ic">🔀</div><h4>DPU</h4><p>Runs the infrastructure</p></div>
+    </div>
+
+    <h3>Where did DPUs come from?</h3>
+    <p>As data centers scaled to the cloud, more and more CPU time was wasted on <strong>networking, encryption, and storage</strong> instead of customer workloads — the <strong>"data-center tax."</strong> <strong>SmartNICs</strong> evolved into full <strong>DPUs</strong> that offload this entire infrastructure layer onto dedicated silicon.</p>
+
+    <h3>The main idea behind DPU design</h3>
+    <div class="callout">Free the CPU from infrastructure work — <strong>offload, accelerate, and isolate</strong> it. This recovers CPU cores for paying workloads and isolates infrastructure for better security.</div>
+  </section>
+
+  <!-- 2 -->
+  <section>
+    <div class="sec-head"><div class="sec-num">2</div><h2>Basic Functionality &amp; Architecture</h2></div>
+
+    <h3>Simple analogy: the building's facilities team</h3>
+    <p>If the CPU is the <strong>company doing the actual work</strong>, the DPU is the <strong>building's facilities &amp; security team</strong> — handling plumbing, deliveries, and door access so employees can focus on their jobs.</p>
+
+    <h3>The offload model</h3>
+    <div class="offload">
+      <div class="node host"><h4>Host CPU</h4><small>before: 20–30% of cores lost to infrastructure</small><small><strong>after: 100% for apps</strong></small></div>
+      <div class="arrow">⇄</div>
+      <div class="node dpu"><h4>DPU</h4>
+        <div class="tasklist">
+          <span>🌐 Networking / RDMA</span>
+          <span>🔐 Encryption / firewall</span>
+          <span>💾 NVMe storage</span>
+          <span>⚖️ Hypervisor offload</span>
+        </div>
+      </div>
+    </div>
+    <p style="color:var(--muted);font-size:.9rem">Infrastructure moves to the DPU and runs in an <strong>isolated security domain</strong>, separate from the host.</p>
+
+    <h3>What's inside a DPU?</h3>
+    <table>
+      <thead><tr><th>Component</th><th>Role</th></tr></thead>
+      <tbody>
+        <tr><td><strong>CPU cores (usually ARM)</strong></td><td>Run an OS &amp; control logic on the DPU itself</td></tr>
+        <tr><td><strong>High-speed network interface</strong></td><td>The SmartNIC — often 100–400 Gb/s</td></tr>
+        <tr><td><strong>Hardware accelerators</strong></td><td>Fixed-function engines for networking, security, storage</td></tr>
+      </tbody>
+    </table>
+
+    <h3>DPU vs CPU vs traditional NIC</h3>
+    <table>
+      <thead><tr><th>Feature</th><th>CPU</th><th>SmartNIC</th><th>DPU</th></tr></thead>
+      <tbody>
+        <tr><td>Main job</td><td>Run apps</td><td>Move packets</td><td><strong>Run all infrastructure</strong></td></tr>
+        <tr><td>Programmable</td><td>Fully</td><td>Limited</td><td><strong>Fully (own OS)</strong></td></tr>
+        <tr><td>Offloads CPU</td><td>—</td><td>A little</td><td><strong>Massively</strong></td></tr>
+        <tr><td>Security isolation</td><td>Shared</td><td>Minimal</td><td><strong>Separate domain</strong></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- 3 -->
+  <section>
+    <div class="sec-head"><div class="sec-num">3</div><h2>Applications</h2></div>
+    <h3>Where DPUs are used</h3>
+    <div class="badges">
+      <span class="badge">☁️ Cloud data centers</span>
+      <span class="badge">🏢 Enterprise virtualization</span>
+      <span class="badge">🔐 Zero-trust security</span>
+      <span class="badge">💾 Disaggregated storage</span>
+      <span class="badge">🧠 AI data centers</span>
+      <span class="badge">📡 Telco / 5G edge</span>
+    </div>
+    <div class="twocol">
+      <div class="panel good"><h4>✅ Why deploy a DPU</h4><ul><li>Recover CPU cores (lower cost)</li><li>Better security through isolation</li><li>Line-rate networking &amp; storage</li><li>Composable, software-defined infra</li></ul></div>
+      <div class="panel bad"><h4>⛔ Not for</h4><ul><li>End-user applications → CPU</li><li>AI training / heavy math → GPU/TPU</li><li>Graphics → GPU</li><li>It's infrastructure, not compute</li></ul></div>
+    </div>
+  </section>
+
+  <!-- 4 -->
+  <section>
+    <div class="sec-head"><div class="sec-num">4</div><h2>Market Examples &amp; Future</h2></div>
+    <h3>The major players</h3>
+    <table>
+      <thead><tr><th>Vendor</th><th>DPU / note</th></tr></thead>
+      <tbody>
+        <tr><td><strong>NVIDIA</strong></td><td><strong>BlueField</strong> — ARM cores + network + accelerators, DOCA software</td></tr>
+        <tr><td><strong>AMD (Pensando)</strong></td><td>DPUs for cloud &amp; enterprise (HPE/Dell servers)</td></tr>
+        <tr><td><strong>Intel</strong></td><td><strong>IPU</strong> — Infrastructure Processing Unit (Intel's name)</td></tr>
+        <tr><td><strong>Marvell</strong></td><td>OCTEON DPUs for networking &amp; telco</td></tr>
+        <tr><td><strong>AWS</strong></td><td><strong>Nitro</strong> — effectively a DPU that pioneered the model</td></tr>
+      </tbody>
+    </table>
+    <div class="callout"><strong>The software layer:</strong> a DPU is only as good as its programmability. <strong>NVIDIA DOCA</strong> ("CUDA for DPUs") and similar SDKs let developers write infrastructure services that run on the DPU.</div>
+    <div class="stats">
+      <div class="stat"><div class="num">100–400</div><div class="lbl">Gb/s networking</div></div>
+      <div class="stat"><div class="num">20–30%</div><div class="lbl">CPU cores recovered</div></div>
+      <div class="stat"><div class="num">Nitro</div><div class="lbl">AWS pioneer</div></div>
+    </div>
+  </section>
+
+  <!-- 5 -->
+  <section>
+    <div class="sec-head"><div class="sec-num">5</div><h2>Summary</h2></div>
+    <div class="essence">
+      <h3>DPU in one paragraph</h3>
+      <p>A DPU is a programmable processor that <strong>offloads the data center's infrastructure work</strong> — networking, storage, and security — from the CPU. Combining ARM cores, a high-speed network interface, and dedicated accelerators, it frees CPU cores for real workloads, isolates infrastructure for security, and moves data at line rate. Alongside the CPU and GPU, it's now the <strong>third pillar</strong> of modern computing.</p>
+    </div>
+    <div class="twocol" style="margin-top:18px">
+      <div class="panel good"><h4>Choose a DPU when…</h4><ul><li>You run a <strong>data center / cloud</strong> at scale</li><li>CPU cores are wasted on <strong>infra</strong></li><li>You need <strong>security isolation</strong></li><li>You want <strong>line-rate</strong> data movement</li></ul></div>
+      <div class="panel"><h4>Future trends</h4><ul><li>DPUs standard in AI &amp; cloud servers</li><li>Security-through-isolation by default</li><li>Software-defined, composable data centers</li><li>Infrastructure fully offloaded from CPU</li></ul></div>
+    </div>
+  </section>
+
+</main>
+
+<footer>DPU · VLSI Architecture Reference · <a href="index.html">Back to all architectures</a></footer>
+
+</body>
+</html>
