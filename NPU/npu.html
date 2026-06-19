@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NPU — Neural Processing Unit</title>
+<style>
+  :root{
+    --accent:#7C3AED;        /* violet */
+    --accent-dark:#5b21b6;
+    --accent-soft:#f1eafe;
+    --ink:#1c1726;
+    --muted:#6b6280;
+    --bg:#f7f4fd;
+    --card:#ffffff;
+    --line:#e7defb;
+    --shadow:0 8px 24px rgba(60,20,120,.10);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;
+       color:var(--ink);background:var(--bg);line-height:1.65}
+  a{color:var(--accent-dark);text-decoration:none}
+
+  /* ---- top nav ---- */
+  .topnav{position:sticky;top:0;z-index:20;display:flex;justify-content:space-between;
+    align-items:center;padding:12px 28px;background:rgba(255,255,255,.85);
+    backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+  .topnav .home{font-weight:600;color:var(--muted)}
+  .topnav .home:hover{color:var(--accent-dark)}
+  .topnav .tag{font-weight:700;color:var(--accent-dark);letter-spacing:.5px}
+
+  /* ---- hero ---- */
+  .hero{position:relative;overflow:hidden;color:#fff;padding:72px 28px 84px;
+    background:linear-gradient(135deg,var(--accent-dark),var(--accent) 70%)}
+  .hero::after{content:"";position:absolute;inset:0;opacity:.20;
+    background-image:radial-gradient(circle at 1px 1px,#fff 1.5px,transparent 0);
+    background-size:26px 26px}
+  .hero-inner{position:relative;max-width:1080px;margin:0 auto;z-index:1}
+  .hero .eyebrow{font-size:.8rem;letter-spacing:3px;text-transform:uppercase;opacity:.85}
+  .hero h1{font-size:3rem;margin:.2em 0 .25em;line-height:1.05}
+  .hero p{font-size:1.2rem;max-width:680px;opacity:.95}
+  .pills{display:flex;flex-wrap:wrap;gap:10px;margin-top:24px}
+  .pill{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);
+    padding:7px 14px;border-radius:999px;font-size:.85rem;font-weight:600}
+
+  /* ---- layout ---- */
+  main{max-width:1080px;margin:-48px auto 60px;padding:0 22px;position:relative;z-index:5}
+  section{background:var(--card);border:1px solid var(--line);border-radius:18px;
+    padding:30px 34px;margin-bottom:26px;box-shadow:var(--shadow)}
+  .sec-head{display:flex;align-items:center;gap:14px;margin-bottom:18px}
+  .sec-num{flex:0 0 auto;width:44px;height:44px;border-radius:50%;display:grid;
+    place-items:center;font-weight:800;color:#fff;background:var(--accent);font-size:1.1rem}
+  .sec-head h2{font-size:1.5rem}
+  h3{margin:22px 0 8px;font-size:1.1rem;color:var(--accent-dark)}
+  p{margin:8px 0}
+
+  /* ---- callout ---- */
+  .callout{border-left:5px solid var(--accent);background:var(--accent-soft);
+    padding:14px 18px;border-radius:0 12px 12px 0;margin:16px 0;font-weight:500}
+
+  /* ---- card grid ---- */
+  .grid{display:grid;gap:16px;margin:16px 0}
+  .grid.c2{grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+  .grid.c3{grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}
+  .card{border:1px solid var(--line);border-radius:14px;padding:18px;background:#fff}
+  .card h4{color:var(--accent-dark);margin-bottom:6px;font-size:1rem}
+  .card .big{font-size:1.9rem;font-weight:800;color:var(--accent-dark);line-height:1}
+
+  /* ---- stat tiles ---- */
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin:18px 0}
+  .stat{background:linear-gradient(160deg,#fff,var(--accent-soft));border:1px solid var(--line);
+    border-radius:14px;padding:16px;text-align:center}
+  .stat .num{font-size:1.7rem;font-weight:800;color:var(--accent-dark)}
+  .stat .lbl{font-size:.8rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+
+  /* ---- badges ---- */
+  .badges{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+  .badge{background:var(--accent-soft);color:var(--accent-dark);border:1px solid var(--line);
+    padding:5px 12px;border-radius:8px;font-size:.85rem;font-weight:600}
+
+  /* ---- two-col good/bad ---- */
+  .twocol{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:16px 0}
+  .panel{border-radius:14px;padding:18px;border:1px solid var(--line)}
+  .panel.good{background:#f3eefe}
+  .panel.bad{background:#fdf1f1;border-color:#f3d2d2}
+  .panel h4{margin-bottom:8px}
+  .panel.good h4{color:var(--accent-dark)}
+  .panel.bad h4{color:#b13a3a}
+  .panel ul{margin-left:18px}
+
+  /* ---- neural network node diagram (NPU signature visual) ---- */
+  .nn{display:flex;justify-content:space-around;align-items:center;gap:10px;
+    margin:18px 0;padding:24px 18px;border:1px dashed var(--accent);border-radius:14px;
+    background:#fbf9ff;position:relative;overflow:hidden}
+  .nn-layer{display:flex;flex-direction:column;gap:14px;z-index:1}
+  .nn-node{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;
+    font-size:.7rem;font-weight:700;color:#fff;background:var(--accent);
+    box-shadow:0 0 0 4px rgba(124,58,237,.15)}
+  .nn-node.in{background:#a78bfa}
+  .nn-node.out{background:var(--accent-dark)}
+  .nn-cap{text-align:center;font-size:.8rem;color:var(--muted);margin-top:8px}
+
+  /* ---- vertical timeline (NPU signature layout) ---- */
+  .timeline{position:relative;margin:18px 0 6px;padding-left:34px}
+  .timeline::before{content:"";position:absolute;left:11px;top:4px;bottom:4px;width:3px;
+    background:linear-gradient(var(--accent),var(--accent-soft))}
+  .tl-item{position:relative;margin-bottom:18px}
+  .tl-item::before{content:"";position:absolute;left:-28px;top:3px;width:15px;height:15px;
+    border-radius:50%;background:var(--accent);border:3px solid #fff;box-shadow:0 0 0 2px var(--accent)}
+  .tl-item h4{color:var(--accent-dark);font-size:1rem;margin-bottom:2px}
+  .tl-item p{margin:0;color:var(--muted);font-size:.92rem}
+
+  /* ---- table ---- */
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:.95rem}
+  th,td{padding:11px 14px;text-align:left;border-bottom:1px solid var(--line)}
+  thead th{background:var(--accent);color:#fff}
+  tbody tr:nth-child(even){background:var(--accent-soft)}
+  tbody tr:hover{background:#ebe1fd}
+
+  /* ---- highlight summary box ---- */
+  .essence{background:linear-gradient(135deg,var(--accent-dark),var(--accent));color:#fff;
+    border-radius:16px;padding:24px 28px;margin:8px 0 4px;box-shadow:var(--shadow)}
+  .essence h3{color:#fff;margin-top:0}
+
+  footer{text-align:center;color:var(--muted);padding:30px;font-size:.9rem}
+  @media(max-width:640px){.twocol{grid-template-columns:1fr}.hero h1{font-size:2.2rem}
+    .nn{flex-wrap:wrap}}
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <a class="home" href="index.html">← All Architectures</a>
+  <span class="tag">NPU</span>
+</nav>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Neural Processing Unit</div>
+    <h1>NPU</h1>
+    <p>A chip purpose-built for neural-network math — running AI inference fast and at very low power, especially on phones and edge devices.</p>
+    <div class="pills">
+      <span class="pill">🧠 AI-only engine</span>
+      <span class="pill">🔋 Performance-per-watt</span>
+      <span class="pill">📱 On-device &amp; edge</span>
+      <span class="pill">🔢 INT8 / FP16</span>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <!-- 1 -->
+  <section>
+    <div class="sec-head"><div class="sec-num">1</div><h2>Introduction</h2></div>
+    <h3>What is an NPU?</h3>
+    <p>An <strong>NPU (Neural Processing Unit)</strong> is a processor <strong>specialized for AI math</strong> — the operations inside neural networks: <strong>matrix multiplications, convolutions, and activations</strong>. A CPU is a general thinker and a GPU is a parallel cruncher; an <strong>NPU is a dedicated AI engine</strong> that does one family of math extremely fast and efficiently.</p>
+
+    <h3>Where did NPUs come from?</h3>
+    <p>NPUs appeared because <strong>AI moved onto everyday devices</strong> — phones needed face unlock, photo enhancement, and voice assistants <em>instantly</em> without draining the battery.</p>
+    <div class="timeline">
+      <div class="tl-item"><h4>CPU-only AI</h4><p>Too slow for real-time on-device inference.</p></div>
+      <div class="tl-item"><h4>GPU on mobile</h4><p>Fast, but used too much power for always-on AI.</p></div>
+      <div class="tl-item"><h4>Dedicated NPU block</h4><p>A small, efficient AI engine added straight into the SoC.</p></div>
+      <div class="tl-item"><h4>AI everywhere</h4><p>On-device, private AI at tiny power budgets.</p></div>
+    </div>
+
+    <h3>The main idea behind NPU design</h3>
+    <div class="callout">Do neural-network math with <strong>maximum performance-per-watt</strong> — hard-wire the exact operations AI needs (massive multiply-accumulate) and use <strong>low-precision numbers</strong> to save power and area.</div>
+  </section>
+
+  <!-- 2 -->
+  <section>
+    <div class="sec-head"><div class="sec-num">2</div><h2>Basic Functionality &amp; Architecture</h2></div>
+
+    <h3>Simple analogy: a dedicated AI assembly line</h3>
+    <p>A GPU is a general factory. An <strong>NPU is a purpose-built assembly line</strong> that makes only one product — neural-network results — so every part is tuned for that single job.</p>
+
+    <h3>The core building block: MAC arrays</h3>
+    <p>Neural networks are mostly <strong>multiply-and-accumulate (MAC)</strong> operations — <em>output = Σ (wᵢ × xᵢ)</em>. An NPU packs <strong>huge arrays of MAC units</strong> plus dedicated convolution and activation hardware.</p>
+    <div class="nn">
+      <div class="nn-layer">
+        <div class="nn-node in">x₁</div><div class="nn-node in">x₂</div><div class="nn-node in">x₃</div>
+      </div>
+      <div class="nn-layer">
+        <div class="nn-node">Σ</div><div class="nn-node">Σ</div><div class="nn-node">Σ</div><div class="nn-node">Σ</div>
+      </div>
+      <div class="nn-layer">
+        <div class="nn-node">Σ</div><div class="nn-node">Σ</div><div class="nn-node">Σ</div>
+      </div>
+      <div class="nn-layer">
+        <div class="nn-node out">y₁</div><div class="nn-node out">y₂</div>
+      </div>
+    </div>
+    <p class="nn-cap">Inputs flow through layers of multiply-accumulate units → activations → outputs.</p>
+
+    <h3>Low precision = efficiency</h3>
+    <table>
+      <thead><tr><th>Precision</th><th>Use</th></tr></thead>
+      <tbody>
+        <tr><td><strong>INT8</strong></td><td>Most inference — small, fast, low power</td></tr>
+        <tr><td><strong>FP16 / BF16</strong></td><td>Higher-accuracy inference / light training</td></tr>
+        <tr><td><strong>INT4 / FP8</strong></td><td>Cutting-edge, ultra-efficient inference</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Dataflow &amp; on-chip memory</h3>
+    <div class="badges">
+      <span class="badge">Local SRAM for weights</span>
+      <span class="badge">Streaming dataflow</span>
+      <span class="badge">Maximized data reuse</span>
+      <span class="badge">Measured in TOPS / Watt</span>
+    </div>
+
+    <h3>NPU vs GPU vs CPU</h3>
+    <table>
+      <thead><tr><th>Feature</th><th>CPU</th><th>GPU</th><th>NPU</th></tr></thead>
+      <tbody>
+        <tr><td>Specialization</td><td>General</td><td>Parallel math</td><td><strong>AI only</strong></td></tr>
+        <tr><td>Power efficiency</td><td>Low</td><td>Medium</td><td><strong>Very high</strong></td></tr>
+        <tr><td>Best precision</td><td>FP32/64</td><td>FP16–FP32</td><td><strong>INT8 / FP16</strong></td></tr>
+        <tr><td>Typical home</td><td>Everywhere</td><td>PC / data center</td><td><strong>Phones / edge</strong></td></tr>
+        <tr><td>Flexibility</td><td>Highest</td><td>High</td><td><strong>Low (AI-focused)</strong></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- 3 -->
+  <section>
+    <div class="sec-head"><div class="sec-num">3</div><h2>Applications</h2></div>
+    <h3>On-device / edge AI — the sweet spot</h3>
+    <p>NPUs shine where AI must run <strong>locally, instantly, and at low power</strong>.</p>
+    <div class="badges">
+      <span class="badge">📷 Computational photography</span>
+      <span class="badge">🗣️ Voice assistants</span>
+      <span class="badge">🔐 Face unlock &amp; biometrics</span>
+      <span class="badge">🌐 Live translation</span>
+      <span class="badge">🤖 On-device generative AI</span>
+    </div>
+    <div class="twocol">
+      <div class="panel good"><h4>✅ Why on-device AI wins</h4><ul><li><strong>Privacy</strong> — data never leaves the device</li><li><strong>Latency</strong> — no cloud round-trip</li><li><strong>Battery</strong> — far more efficient</li><li><strong>Offline</strong> — works with no network</li></ul></div>
+      <div class="panel bad"><h4>⛔ Not good at</h4><ul><li>General-purpose programs → CPU</li><li>Graphics / broad compute → GPU</li><li>Large-scale training → GPU/TPU</li><li>Non-neural-shaped math</li></ul></div>
+    </div>
+  </section>
+
+  <!-- 4 -->
+  <section>
+    <div class="sec-head"><div class="sec-num">4</div><h2>Market Examples &amp; Future</h2></div>
+    <h3>Where NPUs live today</h3>
+    <table>
+      <thead><tr><th>Vendor</th><th>NPU / engine</th><th>Found in</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Apple</strong></td><td>Neural Engine</td><td>iPhone, iPad, Mac (M-series)</td></tr>
+        <tr><td><strong>Qualcomm</strong></td><td>Hexagon NPU</td><td>Snapdragon phones &amp; PCs</td></tr>
+        <tr><td><strong>Google</strong></td><td>Tensor (Edge TPU)</td><td>Pixel phones</td></tr>
+        <tr><td><strong>Samsung</strong></td><td>Exynos NPU</td><td>Galaxy devices</td></tr>
+        <tr><td><strong>ARM</strong></td><td>Ethos NPU (licensed IP)</td><td>Many SoCs</td></tr>
+        <tr><td><strong>Intel / AMD</strong></td><td>NPU in Core / Ryzen AI</td><td>"AI PC" laptops</td></tr>
+      </tbody>
+    </table>
+    <div class="callout"><strong>The "AI PC" wave:</strong> NPUs are now standard in laptops — Microsoft's <strong>Copilot+ PCs</strong> require one — typically <strong>40+ TOPS</strong> of on-device AI.</div>
+    <div class="stats">
+      <div class="stat"><div class="num">40+</div><div class="lbl">TOPS in AI PCs</div></div>
+      <div class="stat"><div class="num">INT4 / FP8</div><div class="lbl">next precision</div></div>
+      <div class="stat"><div class="num">On-device</div><div class="lbl">generative AI</div></div>
+    </div>
+  </section>
+
+  <!-- 5 -->
+  <section>
+    <div class="sec-head"><div class="sec-num">5</div><h2>Summary</h2></div>
+    <div class="essence">
+      <h3>NPU in one paragraph</h3>
+      <p>An NPU is a processor <strong>purpose-built for neural-network math</strong>. It packs large arrays of multiply-accumulate units and low-precision arithmetic to run AI <strong>inference</strong> with the best possible <strong>performance-per-watt</strong>. By specializing, it gives up general flexibility but enables fast, private, battery-friendly AI directly on phones, PCs, and edge devices.</p>
+    </div>
+    <div class="twocol" style="margin-top:18px">
+      <div class="panel good"><h4>Choose an NPU when…</h4><ul><li>You run AI inference <strong>on-device</strong></li><li><strong>Power &amp; battery</strong> matter</li><li>You need <strong>low latency</strong> &amp; <strong>privacy</strong></li></ul></div>
+      <div class="panel"><h4>Future trends</h4><ul><li>On-device generative AI as normal</li><li>Hundreds of TOPS in consumer chips</li><li>Ultra-low precision (INT4, FP8)</li><li>Standard SoC block beside CPU + GPU</li></ul></div>
+    </div>
+  </section>
+
+</main>
+
+<footer>NPU · VLSI Architecture Reference · <a href="index.html">Back to all architectures</a></footer>
+
+</body>
+</html>
