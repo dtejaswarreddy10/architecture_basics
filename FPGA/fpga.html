@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FPGA — Field-Programmable Gate Array</title>
+<style>
+  :root{
+    --accent:#F59E0B;        /* amber */
+    --accent-dark:#b9770a;
+    --accent-soft:#fef3da;
+    --ink:#241c0e;
+    --muted:#7a6a4c;
+    --bg:#fdf8ee;
+    --card:#ffffff;
+    --line:#f6e6c5;
+    --shadow:0 8px 24px rgba(150,100,10,.10);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;
+       color:var(--ink);background:var(--bg);line-height:1.65}
+  a{color:var(--accent-dark);text-decoration:none}
+
+  /* ---- top nav ---- */
+  .topnav{position:sticky;top:0;z-index:20;display:flex;justify-content:space-between;
+    align-items:center;padding:12px 28px;background:rgba(255,255,255,.85);
+    backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+  .topnav .home{font-weight:600;color:var(--muted)}
+  .topnav .home:hover{color:var(--accent-dark)}
+  .topnav .tag{font-weight:700;color:var(--accent-dark);letter-spacing:.5px}
+
+  /* ---- hero ---- */
+  .hero{position:relative;overflow:hidden;color:#3a2c08;padding:72px 28px 84px;
+    background:linear-gradient(135deg,#fbbf24,var(--accent) 70%)}
+  .hero::after{content:"";position:absolute;inset:0;opacity:.25;
+    background-image:linear-gradient(#fff 2px,transparent 0),linear-gradient(90deg,#fff 2px,transparent 0);
+    background-size:34px 34px}
+  .hero-inner{position:relative;max-width:1080px;margin:0 auto;z-index:1}
+  .hero .eyebrow{font-size:.8rem;letter-spacing:3px;text-transform:uppercase;opacity:.8}
+  .hero h1{font-size:3rem;margin:.2em 0 .25em;line-height:1.05}
+  .hero p{font-size:1.2rem;max-width:680px;opacity:.95}
+  .pills{display:flex;flex-wrap:wrap;gap:10px;margin-top:24px}
+  .pill{background:rgba(255,255,255,.35);border:1px solid rgba(255,255,255,.6);
+    padding:7px 14px;border-radius:999px;font-size:.85rem;font-weight:600}
+
+  /* ---- layout ---- */
+  main{max-width:1080px;margin:-48px auto 60px;padding:0 22px;position:relative;z-index:5}
+  section{background:var(--card);border:1px solid var(--line);border-radius:18px;
+    padding:30px 34px;margin-bottom:26px;box-shadow:var(--shadow)}
+  .sec-head{display:flex;align-items:center;gap:14px;margin-bottom:18px}
+  .sec-num{flex:0 0 auto;width:44px;height:44px;border-radius:12px;display:grid;
+    place-items:center;font-weight:800;color:#fff;background:var(--accent);font-size:1.1rem}
+  .sec-head h2{font-size:1.5rem}
+  h3{margin:22px 0 8px;font-size:1.1rem;color:var(--accent-dark)}
+  p{margin:8px 0}
+
+  /* ---- callout ---- */
+  .callout{border-left:5px solid var(--accent);background:var(--accent-soft);
+    padding:14px 18px;border-radius:0 12px 12px 0;margin:16px 0;font-weight:500}
+
+  /* ---- card grid ---- */
+  .grid{display:grid;gap:16px;margin:16px 0}
+  .grid.c2{grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+  .grid.c3{grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}
+  .card{border:1px solid var(--line);border-radius:14px;padding:18px;background:#fff}
+  .card h4{color:var(--accent-dark);margin-bottom:6px;font-size:1rem}
+
+  /* ---- stat tiles ---- */
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin:18px 0}
+  .stat{background:linear-gradient(160deg,#fff,var(--accent-soft));border:1px solid var(--line);
+    border-radius:14px;padding:16px;text-align:center}
+  .stat .num{font-size:1.6rem;font-weight:800;color:var(--accent-dark)}
+  .stat .lbl{font-size:.8rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+
+  /* ---- badges ---- */
+  .badges{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+  .badge{background:var(--accent-soft);color:var(--accent-dark);border:1px solid var(--line);
+    padding:5px 12px;border-radius:8px;font-size:.85rem;font-weight:600}
+
+  /* ---- two-col good/bad ---- */
+  .twocol{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:16px 0}
+  .panel{border-radius:14px;padding:18px;border:1px solid var(--line)}
+  .panel.good{background:#fef6e3}
+  .panel.bad{background:#f7f3eb;border-color:#e6dcc6}
+  .panel h4{margin-bottom:8px}
+  .panel.good h4{color:var(--accent-dark)}
+  .panel.bad h4{color:#8a6d3b}
+  .panel ul{margin-left:18px}
+
+  /* ---- LUT fabric grid (FPGA signature visual) ---- */
+  .fabric{margin:18px 0;padding:20px;border:1px dashed var(--accent);border-radius:14px;
+    background:#fffdf7}
+  .fabric-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:8px}
+  .clb{aspect-ratio:1;border:2px solid var(--accent);border-radius:6px;background:#fff;
+    display:grid;place-items:center;font-size:.55rem;font-weight:700;color:var(--accent-dark);
+    position:relative}
+  .clb.on{background:var(--accent);color:#fff}
+  .clb.dsp{background:var(--accent-dark);color:#fff;border-color:var(--accent-dark)}
+  .fabric-cap{text-align:center;color:var(--muted);font-size:.85rem;margin-top:12px}
+
+  /* ---- flow (HDL -> bitstream) ---- */
+  .flow{display:flex;align-items:stretch;gap:0;flex-wrap:wrap;margin:18px 0}
+  .flow-step{flex:1;min-width:130px;background:#fff;border:1px solid var(--line);
+    border-radius:12px;padding:14px;text-align:center;position:relative;margin:6px}
+  .flow-step .n{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;
+    background:var(--accent);color:#fff;font-weight:800;font-size:.8rem;margin-bottom:6px}
+  .flow-step h4{font-size:.92rem;color:var(--accent-dark);margin:0 0 2px}
+  .flow-step p{font-size:.8rem;color:var(--muted);margin:0}
+
+  /* ---- table ---- */
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:.95rem}
+  th,td{padding:11px 14px;text-align:left;border-bottom:1px solid var(--line)}
+  thead th{background:var(--accent);color:#fff}
+  tbody tr:nth-child(even){background:var(--accent-soft)}
+  tbody tr:hover{background:#fbe7bf}
+
+  /* ---- highlight summary box ---- */
+  .essence{background:linear-gradient(135deg,var(--accent-dark),var(--accent));color:#fff;
+    border-radius:16px;padding:24px 28px;margin:8px 0 4px;box-shadow:var(--shadow)}
+  .essence h3{color:#fff;margin-top:0}
+
+  footer{text-align:center;color:var(--muted);padding:30px;font-size:.9rem}
+  @media(max-width:640px){.twocol{grid-template-columns:1fr}.hero h1{font-size:2.2rem}
+    .fabric-grid{grid-template-columns:repeat(6,1fr)}}
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <a class="home" href="index.html">← All Architectures</a>
+  <span class="tag">FPGA</span>
+</nav>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Field-Programmable Gate Array</div>
+    <h1>FPGA</h1>
+    <p>A chip whose hardware you can reprogram after it's built — a blank canvas of logic blocks you wire into any digital circuit you need.</p>
+    <div class="pills">
+      <span class="pill">🧩 Reconfigurable hardware</span>
+      <span class="pill">⚡ Deterministic low latency</span>
+      <span class="pill">🛠️ HDL: VHDL / Verilog</span>
+      <span class="pill">🔁 Reprogrammable</span>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <!-- 1 -->
+  <section>
+    <div class="sec-head"><div class="sec-num">1</div><h2>Introduction</h2></div>
+    <h3>What is an FPGA?</h3>
+    <p>An <strong>FPGA (Field-Programmable Gate Array)</strong> is a chip made of <strong>reconfigurable hardware</strong>. Instead of running software on a fixed processor, you <strong>rewire the chip itself</strong> to <em>become</em> the circuit you want — a network controller, a video processor, an AI accelerator, anything. A CPU/GPU runs instructions on fixed hardware; an FPGA lets you <strong>change the hardware</strong> to match the problem.</p>
+
+    <h3>Where did FPGAs come from?</h3>
+    <p>FPGAs emerged in the <strong>mid-1980s</strong> (Xilinx shipped the first in <strong>1985</strong>) as a flexible middle ground between fixed custom chips (<strong>ASICs</strong>) — fast but unchangeable — and general processors — flexible but slower for specialized tasks. They became essential for <strong>prototyping</strong> chips and for <strong>small-volume</strong> custom hardware.</p>
+
+    <h3>The main idea behind FPGA design</h3>
+    <div class="callout">Make the <strong>hardware itself programmable</strong> — a sea of generic logic blocks and wires, configured by a <strong>bitstream</strong> so the same physical chip can implement <em>any</em> digital design and be reprogrammed later.</div>
+  </section>
+
+  <!-- 2 -->
+  <section>
+    <div class="sec-head"><div class="sec-num">2</div><h2>Basic Functionality &amp; Architecture</h2></div>
+
+    <h3>Simple analogy: electronic LEGO</h3>
+    <p>An FPGA is a giant box of <strong>electronic LEGO</strong>. The blocks are generic, but you snap them into almost any shape — and if you want something different tomorrow, you <strong>take it apart and rebuild</strong>.</p>
+
+    <h3>The reconfigurable fabric</h3>
+    <div class="fabric">
+      <div class="fabric-grid" aria-hidden="true">
+        <span class="clb on">LUT</span><span class="clb">FF</span><span class="clb on">LUT</span><span class="clb dsp">DSP</span><span class="clb">FF</span><span class="clb on">LUT</span><span class="clb">FF</span><span class="clb">I/O</span>
+        <span class="clb">FF</span><span class="clb on">LUT</span><span class="clb">FF</span><span class="clb on">LUT</span><span class="clb dsp">DSP</span><span class="clb">FF</span><span class="clb on">LUT</span><span class="clb">FF</span>
+        <span class="clb on">LUT</span><span class="clb dsp">RAM</span><span class="clb on">LUT</span><span class="clb">FF</span><span class="clb on">LUT</span><span class="clb">FF</span><span class="clb dsp">DSP</span><span class="clb on">LUT</span>
+        <span class="clb">I/O</span><span class="clb on">LUT</span><span class="clb">FF</span><span class="clb dsp">RAM</span><span class="clb">FF</span><span class="clb on">LUT</span><span class="clb">FF</span><span class="clb on">LUT</span>
+      </div>
+      <p class="fabric-cap">A grid of <strong>CLBs</strong> (LUTs + flip-flops), <strong>DSP</strong> slices and <strong>Block RAM</strong>, linked by programmable interconnect.</p>
+    </div>
+
+    <table>
+      <thead><tr><th>Block</th><th>What it does</th></tr></thead>
+      <tbody>
+        <tr><td><strong>LUTs</strong></td><td>Implement any small logic function</td></tr>
+        <tr><td><strong>Flip-Flops</strong></td><td>Store bits, hold state</td></tr>
+        <tr><td><strong>CLBs</strong></td><td>Groups of LUTs + flip-flops</td></tr>
+        <tr><td><strong>DSP slices</strong></td><td>Fast multiply-accumulate (math)</td></tr>
+        <tr><td><strong>Block RAM</strong></td><td>On-chip memory</td></tr>
+        <tr><td><strong>Interconnect</strong></td><td>Programmable wires linking it all</td></tr>
+      </tbody>
+    </table>
+
+    <h3>How it gets "programmed"</h3>
+    <div class="flow">
+      <div class="flow-step"><span class="n">1</span><h4>Write HDL</h4><p>VHDL / Verilog describes the logic</p></div>
+      <div class="flow-step"><span class="n">2</span><h4>Synthesize</h4><p>Map to LUTs, DSPs, BRAM</p></div>
+      <div class="flow-step"><span class="n">3</span><h4>Place &amp; Route</h4><p>Position blocks &amp; wire them</p></div>
+      <div class="flow-step"><span class="n">4</span><h4>Bitstream</h4><p>Load it — the chip becomes your circuit</p></div>
+    </div>
+    <div class="callout">Logic runs as <strong>real parallel hardware</strong>, not sequential instructions — giving <strong>low, predictable latency</strong> for real-time and streaming tasks.</div>
+
+    <h3>FPGA vs ASIC</h3>
+    <table>
+      <thead><tr><th>Feature</th><th>FPGA</th><th>ASIC</th></tr></thead>
+      <tbody>
+        <tr><td>Reconfigurable</td><td><strong>Yes — anytime</strong></td><td>No — fixed forever</td></tr>
+        <tr><td>Upfront cost (NRE)</td><td><strong>Low</strong></td><td>Very high</td></tr>
+        <tr><td>Per-unit cost</td><td>Higher</td><td><strong>Low at volume</strong></td></tr>
+        <tr><td>Performance / efficiency</td><td>High</td><td><strong>Highest</strong></td></tr>
+        <tr><td>Time to market</td><td><strong>Fast</strong></td><td>Slow</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- 3 -->
+  <section>
+    <div class="sec-head"><div class="sec-num">3</div><h2>Applications</h2></div>
+    <h3>Where FPGAs shine</h3>
+    <div class="badges">
+      <span class="badge">🔬 Chip prototyping / emulation</span>
+      <span class="badge">🌐 Networking &amp; smart NICs</span>
+      <span class="badge">📈 High-frequency trading</span>
+      <span class="badge">📡 Telecom &amp; 5G</span>
+      <span class="badge">🛰️ Aerospace &amp; defense</span>
+      <span class="badge">🎥 Video &amp; broadcast</span>
+      <span class="badge">🤖 Custom accelerators</span>
+    </div>
+    <div class="twocol">
+      <div class="panel good"><h4>✅ Pick an FPGA for</h4><ul><li>Custom hardware for one task</li><li>Deterministic ultra-low latency</li><li>Fine-grained parallelism</li><li>Specs that may change</li></ul></div>
+      <div class="panel bad"><h4>⛔ Not good at</h4><ul><li>General software / OS → CPU</li><li>Easy programming (HDL is hard)</li><li>Lowest cost at huge volume → ASIC</li><li>Peak dense matrix math → GPU/TPU</li></ul></div>
+    </div>
+  </section>
+
+  <!-- 4 -->
+  <section>
+    <div class="sec-head"><div class="sec-num">4</div><h2>Market Examples &amp; Future</h2></div>
+    <h3>The major vendors</h3>
+    <table>
+      <thead><tr><th>Vendor</th><th>Family / note</th></tr></thead>
+      <tbody>
+        <tr><td><strong>AMD (Xilinx)</strong></td><td>Virtex, Kintex, Artix, Zynq, <strong>Versal</strong> — market leader</td></tr>
+        <tr><td><strong>Intel (Altera)</strong></td><td>Stratix, Arria, Cyclone, Agilex</td></tr>
+        <tr><td><strong>Lattice</strong></td><td>Small, low-power FPGAs for edge</td></tr>
+        <tr><td><strong>Microchip</strong></td><td>Flash-based &amp; space-grade FPGAs</td></tr>
+      </tbody>
+    </table>
+    <div class="callout"><strong>The big shift — SoC FPGAs &amp; ACAPs:</strong> modern parts combine <strong>ARM CPU cores</strong> + fabric (Zynq) and <strong>AI engines + DSP + fabric</strong> (Versal ACAP), blending software flexibility with reconfigurable acceleration.</div>
+    <div class="stats">
+      <div class="stat"><div class="num">1985</div><div class="lbl">first FPGA</div></div>
+      <div class="stat"><div class="num">HLS</div><div class="lbl">design in C/C++</div></div>
+      <div class="stat"><div class="num">Edge AI</div><div class="lbl">low-power inference</div></div>
+    </div>
+  </section>
+
+  <!-- 5 -->
+  <section>
+    <div class="sec-head"><div class="sec-num">5</div><h2>Summary</h2></div>
+    <div class="essence">
+      <h3>FPGA in one paragraph</h3>
+      <p>An FPGA is a chip full of <strong>reconfigurable logic blocks</strong> that you wire into any digital circuit using an HDL. Because the design runs as <strong>real parallel hardware</strong>, FPGAs deliver low, predictable latency and high efficiency while staying <strong>reprogrammable</strong> — a flexible middle ground between general processors and fixed ASICs. Ideal for prototyping, networking, real-time processing, and evolving specs.</p>
+    </div>
+    <div class="twocol" style="margin-top:18px">
+      <div class="panel good"><h4>Choose an FPGA when…</h4><ul><li>You need <strong>custom hardware</strong>, not millions of units</li><li>Latency must be <strong>ultra-low &amp; deterministic</strong></li><li>Your <strong>design may change</strong></li><li>You're <strong>prototyping a chip</strong></li></ul></div>
+      <div class="panel"><h4>Future trends</h4><ul><li>Adaptive SoCs (CPU + AI engines + fabric)</li><li>FPGAs as data-center accelerators</li><li>Easier design via High-Level Synthesis</li><li>Power-efficient FPGAs for edge AI</li></ul></div>
+    </div>
+  </section>
+
+</main>
+
+<footer>FPGA · VLSI Architecture Reference · <a href="index.html">Back to all architectures</a></footer>
+
+</body>
+</html>
