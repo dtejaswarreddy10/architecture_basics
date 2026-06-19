@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GPU — Graphics Processing Unit</title>
+<style>
+  :root{
+    --accent:#76B900;        /* NVIDIA green */
+    --accent-dark:#4f7d00;
+    --accent-soft:#eef7dc;
+    --ink:#1a1f17;
+    --muted:#5d6b53;
+    --bg:#f6f9f0;
+    --card:#ffffff;
+    --line:#e2ead0;
+    --shadow:0 8px 24px rgba(40,60,10,.08);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;
+       color:var(--ink);background:var(--bg);line-height:1.65}
+  a{color:var(--accent-dark);text-decoration:none}
+
+  /* ---- top nav ---- */
+  .topnav{position:sticky;top:0;z-index:20;display:flex;justify-content:space-between;
+    align-items:center;padding:12px 28px;background:rgba(255,255,255,.85);
+    backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+  .topnav .home{font-weight:600;color:var(--muted)}
+  .topnav .home:hover{color:var(--accent-dark)}
+  .topnav .tag{font-weight:700;color:var(--accent-dark);letter-spacing:.5px}
+
+  /* ---- hero ---- */
+  .hero{position:relative;overflow:hidden;color:#fff;padding:72px 28px 84px;
+    background:linear-gradient(135deg,var(--accent-dark),var(--accent) 70%)}
+  .hero::after{content:"";position:absolute;inset:0;opacity:.18;
+    background-image:radial-gradient(circle at 1px 1px,#fff 1.5px,transparent 0);
+    background-size:22px 22px}
+  .hero-inner{position:relative;max-width:1080px;margin:0 auto;z-index:1}
+  .hero .eyebrow{font-size:.8rem;letter-spacing:3px;text-transform:uppercase;opacity:.85}
+  .hero h1{font-size:3rem;margin:.2em 0 .25em;line-height:1.05}
+  .hero p{font-size:1.2rem;max-width:680px;opacity:.95}
+  .pills{display:flex;flex-wrap:wrap;gap:10px;margin-top:24px}
+  .pill{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);
+    padding:7px 14px;border-radius:999px;font-size:.85rem;font-weight:600}
+
+  /* ---- layout ---- */
+  main{max-width:1080px;margin:-48px auto 60px;padding:0 22px;position:relative;z-index:5}
+  section{background:var(--card);border:1px solid var(--line);border-radius:18px;
+    padding:30px 34px;margin-bottom:26px;box-shadow:var(--shadow)}
+  .sec-head{display:flex;align-items:center;gap:14px;margin-bottom:18px}
+  .sec-num{flex:0 0 auto;width:44px;height:44px;border-radius:12px;display:grid;
+    place-items:center;font-weight:800;color:#fff;background:var(--accent);font-size:1.1rem}
+  .sec-head h2{font-size:1.5rem}
+  h3{margin:22px 0 8px;font-size:1.1rem;color:var(--accent-dark)}
+  p{margin:8px 0}
+
+  /* ---- callout ---- */
+  .callout{border-left:5px solid var(--accent);background:var(--accent-soft);
+    padding:14px 18px;border-radius:0 12px 12px 0;margin:16px 0;font-weight:500}
+
+  /* ---- card grid ---- */
+  .grid{display:grid;gap:16px;margin:16px 0}
+  .grid.c2{grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+  .grid.c3{grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}
+  .card{border:1px solid var(--line);border-radius:14px;padding:18px;background:#fff}
+  .card h4{color:var(--accent-dark);margin-bottom:6px;font-size:1rem}
+  .card .big{font-size:1.9rem;font-weight:800;color:var(--accent-dark);line-height:1}
+
+  /* ---- stat tiles ---- */
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin:18px 0}
+  .stat{background:linear-gradient(160deg,#fff,var(--accent-soft));border:1px solid var(--line);
+    border-radius:14px;padding:16px;text-align:center}
+  .stat .num{font-size:1.7rem;font-weight:800;color:var(--accent-dark)}
+  .stat .lbl{font-size:.8rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+
+  /* ---- badges ---- */
+  .badges{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+  .badge{background:var(--accent-soft);color:var(--accent-dark);border:1px solid var(--line);
+    padding:5px 12px;border-radius:8px;font-size:.85rem;font-weight:600}
+
+  /* ---- two-col good/bad ---- */
+  .twocol{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:16px 0}
+  .panel{border-radius:14px;padding:18px;border:1px solid var(--line)}
+  .panel.good{background:#f1f9e6}
+  .panel.bad{background:#fdf1f1;border-color:#f3d2d2}
+  .panel h4{margin-bottom:8px}
+  .panel.good h4{color:#4f7d00}
+  .panel.bad h4{color:#b13a3a}
+  .panel ul{margin-left:18px}
+
+  /* ---- SIMT diagram ---- */
+  .simt{margin:18px 0;padding:18px;border:1px dashed var(--accent);border-radius:14px;background:#fbfdf5}
+  .simt .instr{display:inline-block;background:var(--accent-dark);color:#fff;padding:6px 14px;
+    border-radius:8px;font-weight:700;margin-bottom:12px}
+  .threads{display:grid;grid-template-columns:repeat(16,1fr);gap:5px}
+  .threads .t{aspect-ratio:1;background:var(--accent);border-radius:4px;opacity:.85;
+    animation:none}
+  .threads .t:nth-child(even){background:var(--accent-dark)}
+
+  /* ---- table ---- */
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:.95rem}
+  th,td{padding:11px 14px;text-align:left;border-bottom:1px solid var(--line)}
+  thead th{background:var(--accent);color:#fff}
+  tbody tr:nth-child(even){background:var(--accent-soft)}
+  tbody tr:hover{background:#e7f3cf}
+
+  /* ---- highlight summary box ---- */
+  .essence{background:linear-gradient(135deg,var(--accent-dark),var(--accent));color:#fff;
+    border-radius:16px;padding:24px 28px;margin:8px 0 4px;box-shadow:var(--shadow)}
+  .essence h3{color:#fff;margin-top:0}
+
+  footer{text-align:center;color:var(--muted);padding:30px;font-size:.9rem}
+  @media(max-width:640px){.twocol{grid-template-columns:1fr}.hero h1{font-size:2.2rem}
+    .threads{grid-template-columns:repeat(8,1fr)}}
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <a class="home" href="index.html">← All Architectures</a>
+  <span class="tag">GPU</span>
+</nav>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Graphics Processing Unit</div>
+    <h1>GPU</h1>
+    <p>A massively parallel processor that runs thousands of simple operations at once — born for graphics, now the backbone of AI.</p>
+    <div class="pills">
+      <span class="pill">⚡ Thousands of cores</span>
+      <span class="pill">🎮 Born from graphics</span>
+      <span class="pill">🧠 Powers modern AI</span>
+      <span class="pill">📊 Throughput-first</span>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <!-- 1 -->
+  <section>
+    <div class="sec-head"><div class="sec-num">1</div><h2>Introduction</h2></div>
+    <h3>What is a GPU?</h3>
+    <p>A <strong>GPU (Graphics Processing Unit)</strong> is a processor designed to do <em>many simple calculations at the same time</em>. If a <strong>CPU</strong> is one very smart person solving one problem at a time, a <strong>GPU</strong> is <strong>thousands of workers</strong> each doing a tiny task together.</p>
+
+    <h3>Where did GPUs come from?</h3>
+    <p>GPUs were <strong>not</strong> invented for AI — they came from <strong>computer graphics and gaming</strong>: drawing millions of pixels, applying lighting and textures, and rendering 3D scenes in real time. Early GPUs were called <em>graphics accelerators</em>.</p>
+
+    <h3>The main idea behind GPU design</h3>
+    <div class="callout">Trade <strong>complexity</strong> for <strong>massive parallelism</strong> — instead of a few powerful cores, use thousands of simpler ones optimized for <strong>throughput</strong>, not low latency.</div>
+  </section>
+
+  <!-- 2 -->
+  <section>
+    <div class="sec-head"><div class="sec-num">2</div><h2>Basic Functionality &amp; Architecture</h2></div>
+
+    <h3>Simple analogy: a factory</h3>
+    <p>A GPU is a huge factory. The <strong>CPU</strong> is one expert craftsman; the <strong>GPU</strong> is thousands of assembly-line workers — each doing the <strong>same task</strong>, on <strong>different data</strong>, <strong>at the same time</strong>.</p>
+
+    <h3>SMs and CUDA cores (the workers)</h3>
+    <p>A GPU is divided into <strong>Streaming Multiprocessors (SMs)</strong>, each packed with small <strong>CUDA cores</strong>. Typical NVIDIA H100:</p>
+    <div class="stats">
+      <div class="stat"><div class="num">~120</div><div class="lbl">SMs</div></div>
+      <div class="stat"><div class="num">~128</div><div class="lbl">cores / SM</div></div>
+      <div class="stat"><div class="num">15,000+</div><div class="lbl">CUDA cores</div></div>
+      <div class="stat"><div class="num">3+ TB/s</div><div class="lbl">HBM bandwidth</div></div>
+    </div>
+
+    <h3>SIMD vs SIMT — one instruction, many threads</h3>
+    <div class="simt">
+      <span class="instr">Instruction: pixel × 0.8</span>
+      <div class="threads">
+        <span class="t"></span><span class="t"></span><span class="t"></span><span class="t"></span>
+        <span class="t"></span><span class="t"></span><span class="t"></span><span class="t"></span>
+        <span class="t"></span><span class="t"></span><span class="t"></span><span class="t"></span>
+        <span class="t"></span><span class="t"></span><span class="t"></span><span class="t"></span>
+        <span class="t"></span><span class="t"></span><span class="t"></span><span class="t"></span>
+        <span class="t"></span><span class="t"></span><span class="t"></span><span class="t"></span>
+        <span class="t"></span><span class="t"></span><span class="t"></span><span class="t"></span>
+        <span class="t"></span><span class="t"></span><span class="t"></span><span class="t"></span>
+      </div>
+      <p style="margin-top:10px;color:var(--muted);font-size:.9rem">Every thread runs the <strong>same instruction</strong> on a <strong>different</strong> piece of data (SIMT). Perfect for "multiply all 1M pixels by 0.8."</p>
+    </div>
+
+    <h3>Memory hierarchy</h3>
+    <div class="badges">
+      <span class="badge">Registers (fastest)</span>
+      <span class="badge">Shared memory (per SM)</span>
+      <span class="badge">L2 cache</span>
+      <span class="badge">Global VRAM (huge)</span>
+    </div>
+
+    <h3>GPU vs CPU</h3>
+    <table>
+      <thead><tr><th>Feature</th><th>CPU</th><th>GPU</th></tr></thead>
+      <tbody>
+        <tr><td>Core count</td><td>8–64</td><td>10,000+</td></tr>
+        <tr><td>Clock speed</td><td>Very high</td><td>Moderate</td></tr>
+        <tr><td>Cache</td><td>Large</td><td>Smaller</td></tr>
+        <tr><td>Parallelism</td><td>Limited</td><td>Massive</td></tr>
+        <tr><td>Best at</td><td>Logic &amp; control</td><td>Math &amp; data</td></tr>
+      </tbody>
+    </table>
+    <div class="callout">CPUs handle <strong>decision-making</strong>. GPUs handle <strong>number-crunching</strong>.</div>
+  </section>
+
+  <!-- 3 -->
+  <section>
+    <div class="sec-head"><div class="sec-num">3</div><h2>Applications</h2></div>
+    <h3>From gaming to AI</h3>
+    <p>GPUs were built for <strong>real-time rendering</strong> — millions of calculations per frame at 60–240 FPS. The same matrix-math muscle now powers <strong>AI training</strong> with <strong>Tensor Cores</strong>, mixed precision (FP16/BF16/FP8), and huge bandwidth — giving <strong>10×–100×</strong> speedups vs CPU.</p>
+    <div class="badges">
+      <span class="badge">🎮 Gaming &amp; rendering</span>
+      <span class="badge">🧠 Deep learning</span>
+      <span class="badge">🔬 Scientific simulation</span>
+      <span class="badge">🎬 Video encoding</span>
+      <span class="badge">🔐 Cryptography</span>
+      <span class="badge">🩻 Medical imaging</span>
+    </div>
+    <div class="twocol">
+      <div class="panel good"><h4>✅ Great at</h4><ul><li>Highly parallel work</li><li>Matrix &amp; vector math</li><li>Large datasets</li><li>Throughput workloads</li></ul></div>
+      <div class="panel bad"><h4>⛔ Not good at</h4><ul><li>Branch-heavy logic</li><li>Small, sequential tasks</li><li>OS-level scheduling</li><li>Complex decision trees</li></ul></div>
+    </div>
+  </section>
+
+  <!-- 4 -->
+  <section>
+    <div class="sec-head"><div class="sec-num">4</div><h2>Market Examples &amp; Future</h2></div>
+    <div class="grid c3">
+      <div class="card"><h4>NVIDIA</h4><p>H100 / H200, NVLink, CUDA + cuDNN.</p><p class="big">~80%</p><p style="color:var(--muted);font-size:.85rem">AI accelerator market</p></div>
+      <div class="card"><h4>AMD</h4><p>MI300X with 192 GB HBM, ROCm open stack.</p><p class="big">192 GB</p><p style="color:var(--muted);font-size:.85rem">HBM memory</p></div>
+      <div class="card"><h4>Intel</h4><p>Ponte Vecchio &amp; Gaudi — price/performance focus.</p><p class="big">Gaudi</p><p style="color:var(--muted);font-size:.85rem">AI accelerator line</p></div>
+    </div>
+
+    <h3>Gaming GPU vs AI GPU</h3>
+    <table>
+      <thead><tr><th>Feature</th><th>Gaming GPU</th><th>AI GPU</th></tr></thead>
+      <tbody>
+        <tr><td>VRAM</td><td>8–24 GB</td><td>80–192 GB</td></tr>
+        <tr><td>Precision</td><td>FP32 focus</td><td>FP16 / BF16 / FP8</td></tr>
+        <tr><td>Interconnect</td><td>PCIe</td><td>NVLink</td></tr>
+        <tr><td>Reliability</td><td>Consumer</td><td>Data-center grade</td></tr>
+        <tr><td>Cost</td><td>Affordable</td><td>Extremely expensive</td></tr>
+      </tbody>
+    </table>
+    <div class="callout"><strong>Trend:</strong> with architectures like <strong>Blackwell</strong>, GPUs are becoming <strong>AI-first</strong>, not graphics-first.</div>
+  </section>
+
+  <!-- 5 -->
+  <section>
+    <div class="sec-head"><div class="sec-num">5</div><h2>Summary</h2></div>
+    <div class="essence">
+      <h3>GPU in one paragraph</h3>
+      <p>A GPU is a massively parallel processor that executes thousands of simple operations simultaneously. Built for graphics, it now powers AI because neural networks rely on matrix math, which GPUs run extremely efficiently. It sacrifices complex control logic for raw <strong>throughput</strong> — unmatched for data-parallel work.</p>
+    </div>
+    <div class="twocol" style="margin-top:18px">
+      <div class="panel good"><h4>Choose a GPU when…</h4><ul><li>Your workload is highly parallel</li><li>You process large datasets</li><li>You need fast matrix ops</li><li>You're doing AI / ML / HPC</li></ul></div>
+      <div class="panel"><h4>Future trends</h4><ul><li>AI &gt; graphics specialization</li><li>Lower precision (FP8, INT8)</li><li>Tighter CPU–GPU integration</li><li>Larger shared memory pools</li></ul></div>
+    </div>
+  </section>
+
+</main>
+
+<footer>GPU · VLSI Architecture Reference · <a href="index.html">Back to all architectures</a></footer>
+
+</body>
+</html>
