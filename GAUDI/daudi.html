@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gaudi — AI Accelerator (Intel / Habana)</title>
+<style>
+  :root{
+    --accent:#16A34A;        /* emerald */
+    --accent-dark:#15803d;
+    --accent-soft:#d8f5e3;
+    --ink:#06281a;
+    --muted:#4a6b58;
+    --bg:#f1fdf6;
+    --card:#ffffff;
+    --line:#c3ecd3;
+    --shadow:0 8px 24px rgba(21,128,61,.10);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;
+       color:var(--ink);background:var(--bg);line-height:1.65}
+  a{color:var(--accent-dark);text-decoration:none}
+  .topnav{position:sticky;top:0;z-index:20;display:flex;justify-content:space-between;
+    align-items:center;padding:12px 28px;background:rgba(255,255,255,.85);
+    backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+  .topnav .home{font-weight:600;color:var(--muted)}
+  .topnav .home:hover{color:var(--accent-dark)}
+  .topnav .tag{font-weight:700;color:var(--accent-dark);letter-spacing:.5px}
+  .hero{position:relative;overflow:hidden;color:#fff;padding:72px 28px 84px;
+    background:linear-gradient(135deg,var(--accent-dark),var(--accent) 70%)}
+  .hero::after{content:"";position:absolute;inset:0;opacity:.16;
+    background-image:linear-gradient(90deg,#fff 1px,transparent 1px),
+      linear-gradient(#fff 1px,transparent 1px);background-size:34px 34px}
+  .hero-inner{position:relative;max-width:1080px;margin:0 auto;z-index:1}
+  .hero .eyebrow{font-size:.8rem;letter-spacing:3px;text-transform:uppercase;opacity:.85}
+  .hero h1{font-size:3rem;margin:.2em 0 .25em;line-height:1.05}
+  .hero p{font-size:1.2rem;max-width:680px;opacity:.95}
+  .pills{display:flex;flex-wrap:wrap;gap:10px;margin-top:24px}
+  .pill{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);
+    padding:7px 14px;border-radius:999px;font-size:.85rem;font-weight:600}
+  main{max-width:1080px;margin:-48px auto 60px;padding:0 22px;position:relative;z-index:5}
+  section{background:var(--card);border:1px solid var(--line);border-radius:18px;
+    padding:30px 34px;margin-bottom:26px;box-shadow:var(--shadow)}
+  .sec-head{display:flex;align-items:center;gap:14px;margin-bottom:18px}
+  .sec-num{flex:0 0 auto;width:44px;height:44px;border-radius:12px;display:grid;
+    place-items:center;font-weight:800;color:#fff;background:var(--accent);font-size:1.1rem}
+  .sec-head h2{font-size:1.5rem}
+  h3{margin:22px 0 8px;font-size:1.1rem;color:var(--accent-dark)}
+  p{margin:8px 0}
+  .callout{border-left:5px solid var(--accent);background:var(--accent-soft);
+    padding:14px 18px;border-radius:0 12px 12px 0;margin:16px 0;font-weight:500}
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin:18px 0}
+  .stat{background:linear-gradient(160deg,#fff,var(--accent-soft));border:1px solid var(--line);
+    border-radius:14px;padding:16px;text-align:center}
+  .stat .num{font-size:1.6rem;font-weight:800;color:var(--accent-dark)}
+  .stat .lbl{font-size:.8rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+  .badges{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+  .badge{background:var(--accent-soft);color:var(--accent-dark);border:1px solid var(--line);
+    padding:5px 12px;border-radius:8px;font-size:.85rem;font-weight:600}
+  .twocol{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:16px 0}
+  .panel{border-radius:14px;padding:18px;border:1px solid var(--line)}
+  .panel.good{background:#d8f5e3}
+  .panel.bad{background:#eef3f0;border-color:#dbe7e0}
+  .panel h4{margin-bottom:8px}
+  .panel.good h4{color:var(--accent-dark)}
+  .panel.bad h4{color:#5f7c6c}
+  .panel ul{margin-left:18px}
+  /* signature: integrated ethernet / RoCE mesh */
+  .net{margin:16px 0;padding:24px 18px;border:1px dashed var(--accent);border-radius:14px;
+    background:#effdf4}
+  .chip{position:relative;width:170px;height:110px;margin:18px auto 26px;border-radius:12px;
+    background:linear-gradient(160deg,var(--accent),var(--accent-dark));color:#fff;
+    display:grid;place-items:center;text-align:center;font-weight:800;box-shadow:var(--shadow)}
+  .chip small{display:block;font-size:.66rem;font-weight:600;opacity:.9}
+  .chip .ports{position:absolute;display:flex;gap:5px}
+  .chip .ports.top{top:-9px;left:0;right:0;justify-content:center}
+  .chip .ports.bottom{bottom:-9px;left:0;right:0;justify-content:center}
+  .chip .ports.left{left:-9px;top:0;bottom:0;flex-direction:column;justify-content:center}
+  .chip .ports.right{right:-9px;top:0;bottom:0;flex-direction:column;justify-content:center}
+  .port{width:11px;height:11px;border-radius:3px;background:#bbf7d0;border:1px solid var(--accent-dark)}
+  .mesh{display:flex;justify-content:center;align-items:center;gap:0;flex-wrap:wrap}
+  .mnode{width:64px;height:46px;border-radius:9px;display:grid;place-items:center;
+    font-size:.74rem;font-weight:800;color:#fff;background:var(--accent-dark);box-shadow:var(--shadow)}
+  .link{width:42px;height:0;border-top:3px dashed var(--accent);position:relative}
+  .link span{position:absolute;top:-17px;left:50%;transform:translateX(-50%);
+    font-size:.6rem;color:var(--muted);white-space:nowrap}
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:.95rem}
+  th,td{padding:11px 14px;text-align:left;border-bottom:1px solid var(--line)}
+  thead th{background:var(--accent);color:#fff}
+  tbody tr:nth-child(even){background:var(--accent-soft)}
+  tbody tr:hover{background:#bbf0cd}
+  .essence{background:linear-gradient(135deg,var(--accent-dark),var(--accent));color:#fff;
+    border-radius:16px;padding:24px 28px;margin:8px 0 4px;box-shadow:var(--shadow)}
+  .essence h3{color:#fff;margin-top:0}
+  footer{text-align:center;color:var(--muted);padding:30px;font-size:.9rem}
+  @media(max-width:640px){.twocol{grid-template-columns:1fr}.hero h1{font-size:2.2rem}}
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <a class="home" href="index.html">← All Architectures</a>
+  <span class="tag">Gaudi · Intel / Habana</span>
+</nav>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">AI Accelerator · Intel / Habana Labs</div>
+    <h1>Gaudi</h1>
+    <p>A deep-learning accelerator whose superpower is networking — it puts massive standard Ethernet (RoCE) right on the chip, so you scale to thousands of accelerators with ordinary Ethernet.</p>
+    <div class="pills">
+      <span class="pill">🌐 On-chip RoCE Ethernet</span>
+      <span class="pill">🧮 MME + TPCs</span>
+      <span class="pill">💰 Price/performance</span>
+      <span class="pill">🔓 Open, standards-based scaling</span>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <section>
+    <div class="sec-head"><div class="sec-num">1</div><h2>Introduction</h2></div>
+    <h3>What is Gaudi?</h3>
+    <p><strong>Gaudi</strong> is a family of <strong>AI training &amp; inference accelerators</strong> from <strong>Habana Labs</strong>, a company <strong>acquired by Intel in 2019</strong>. It competes with GPUs for deep learning, but its standout feature is <strong>huge amounts of integrated RoCE Ethernet</strong> built directly into the processor for <strong>scaling out</strong>.</p>
+    <h3>Where did it come from?</h3>
+    <p>Habana Labs (Israel, 2016) set out to build cost-effective, easy-to-scale deep-learning silicon. <strong>Intel acquired Habana in 2019</strong> and made Gaudi its flagship data-center training accelerator, emphasizing <strong>price/performance</strong> versus NVIDIA.</p>
+    <h3>The main idea</h3>
+    <div class="callout">Make scaling <strong>cheap and open</strong> by putting networking on the chip. Gaudi pairs specialized matrix &amp; vector engines with a large amount of <strong>on-die Ethernet</strong>, so clusters use <strong>standard switches</strong> instead of proprietary fabrics.</div>
+  </section>
+
+  <section>
+    <div class="sec-head"><div class="sec-num">2</div><h2>Basic Functionality &amp; Architecture</h2></div>
+    <h3>Simple analogy: workers with phones built in</h3>
+    <p>Picture a factory where every worker has a <strong>phone built into their hands</strong> — no walking to a central switchboard. Gaudi bakes the <strong>network into the chip</strong>, so accelerators talk directly using ordinary Ethernet.</p>
+
+    <h3>The key differentiator: Ethernet on the chip</h3>
+    <div class="net">
+      <div class="chip">
+        <div class="ports top"><i class="port"></i><i class="port"></i><i class="port"></i><i class="port"></i><i class="port"></i><i class="port"></i></div>
+        <div class="ports bottom"><i class="port"></i><i class="port"></i><i class="port"></i><i class="port"></i><i class="port"></i><i class="port"></i></div>
+        <div class="ports left"><i class="port"></i><i class="port"></i><i class="port"></i><i class="port"></i><i class="port"></i><i class="port"></i></div>
+        <div class="ports right"><i class="port"></i><i class="port"></i><i class="port"></i><i class="port"></i><i class="port"></i><i class="port"></i></div>
+        GAUDI2<small>24 × 100GbE on-die</small>
+      </div>
+      <div class="mesh">
+        <div class="mnode">G</div><div class="link"><span>RoCE</span></div>
+        <div class="mnode">G</div><div class="link"><span>RoCE</span></div>
+        <div class="mnode">G</div><div class="link"><span>RoCE</span></div>
+        <div class="mnode">G</div>
+      </div>
+      <p style="color:var(--muted);font-size:.85rem;margin-top:14px;text-align:center">Each accelerator carries its own Ethernet ports — chips connect <strong>directly</strong> and scale out with <strong>standard switches</strong>, no proprietary fabric.</p>
+    </div>
+
+    <h3>The building blocks</h3>
+    <table>
+      <thead><tr><th>Block</th><th>Role</th></tr></thead>
+      <tbody>
+        <tr><td><strong>MME — Matrix Math Engine</strong></td><td>Big matrix multiplies (core of deep learning)</td></tr>
+        <tr><td><strong>TPC — Tensor Processor Cores</strong></td><td>Programmable <strong>VLIW SIMD</strong> cores for everything else</td></tr>
+        <tr><td><strong>HBM</strong></td><td>High-bandwidth memory on package</td></tr>
+        <tr><td><strong>Integrated RoCE Ethernet</strong></td><td>Many on-chip 100GbE ports for scale-out</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Gaudi vs GPU</h3>
+    <table>
+      <thead><tr><th>Feature</th><th>GPU</th><th>Gaudi</th></tr></thead>
+      <tbody>
+        <tr><td>Scale-out network</td><td>Proprietary links + switches</td><td><strong>Standard Ethernet (RoCE) on-chip</strong></td></tr>
+        <tr><td>Compute</td><td>CUDA + Tensor Cores</td><td><strong>MME + TPCs</strong></td></tr>
+        <tr><td>Memory</td><td>HBM</td><td>HBM</td></tr>
+        <tr><td>Selling point</td><td>Ecosystem &amp; performance</td><td><strong>Price/perf + open scaling</strong></td></tr>
+        <tr><td>Software</td><td>CUDA</td><td><strong>SynapseAI</strong></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <div class="sec-head"><div class="sec-num">3</div><h2>Applications</h2></div>
+    <div class="badges">
+      <span class="badge">🧠 Deep-learning training at scale</span>
+      <span class="badge">⚡ Large-model inference</span>
+      <span class="badge">☁️ Cloud AI</span>
+      <span class="badge">🏢 Cost-conscious clusters</span>
+      <span class="badge">🌐 Ethernet-based AI data centers</span>
+    </div>
+    <div class="twocol">
+      <div class="panel good"><h4>✅ Why pick Gaudi</h4><ul><li><strong>Cheaper scaling</strong> with standard Ethernet</li><li>Strong <strong>price/performance</strong> vs GPUs</li><li><strong>No proprietary fabric</strong> lock-in</li><li>Purpose-built matrix + vector engines</li></ul></div>
+      <div class="panel bad"><h4>⛔ Not for</h4><ul><li>General computing → CPU</li><li>Graphics / rendering → GPU</li><li>Largest software ecosystem (CUDA)</li><li>Tiny edge / ultra-low-power → NPU</li></ul></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><div class="sec-num">4</div><h2>Market Examples &amp; Future</h2></div>
+    <table>
+      <thead><tr><th>Item</th><th>Note</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Gaudi (Gaudi1)</strong></td><td>First-generation training accelerator</td></tr>
+        <tr><td><strong>Gaudi2</strong></td><td>24× 100GbE on-chip, HBM2e — strong MLPerf showing</td></tr>
+        <tr><td><strong>Gaudi3</strong></td><td>Newer generation — more compute &amp; memory bandwidth</td></tr>
+        <tr><td><strong>SynapseAI</strong></td><td>Software stack with PyTorch integration</td></tr>
+      </tbody>
+    </table>
+    <div class="callout">Intel positions Gaudi as a <strong>price/performance</strong> alternative to NVIDIA, with <strong>integrated Ethernet</strong> as the hook for <strong>open, standards-based scaling</strong>. <em>(Intel has signaled a longer-term roadmap converging its GPU and Gaudi AI efforts.)</em></div>
+  </section>
+
+  <section>
+    <div class="sec-head"><div class="sec-num">5</div><h2>Summary</h2></div>
+    <div class="essence">
+      <h3>Gaudi in one paragraph</h3>
+      <p>Gaudi is <strong>Intel/Habana's</strong> deep-learning accelerator that pairs a <strong>Matrix Math Engine</strong> and programmable <strong>Tensor Processor Cores</strong> with HBM — and crucially <strong>integrates large amounts of standard RoCE Ethernet directly on-chip</strong> (Gaudi2: 24× 100GbE). That on-die networking lets data centers <strong>scale across many accelerators using ordinary Ethernet switches</strong>, giving Gaudi a <strong>price/performance and openness</strong> edge over GPUs that rely on proprietary interconnects.</p>
+    </div>
+    <div class="twocol" style="margin-top:18px">
+      <div class="panel good"><h4>Choose Gaudi when…</h4><ul><li>You scale across <strong>many accelerators</strong></li><li>You want <strong>standard Ethernet</strong> scaling</li><li><strong>Price/performance</strong> matters</li><li>You build <strong>open</strong> AI infrastructure</li></ul></div>
+      <div class="panel"><h4>Future trends</h4><ul><li>Open, Ethernet-based AI networking</li><li>Price/performance competition</li><li>Bigger memory &amp; compute per generation</li><li>Converging AI accelerator roadmaps</li></ul></div>
+    </div>
+  </section>
+
+</main>
+
+<footer>Gaudi · Intel / Habana · VLSI Architecture Reference · <a href="index.html">Back to all architectures</a></footer>
+
+</body>
+</html>
