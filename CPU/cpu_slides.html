@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CPU — LinkedIn Carousel</title>
+<style>
+  :root{
+    --accent:#0071C5;        /* Intel blue */
+    --accent-dark:#004a85;
+    --accent-soft:#e7f1fb;
+    --ink:#0f1b27;
+    --muted:#5a6b7b;
+    --line:#cfe0f1;
+    --good:#0d9488;
+    --bad:#e0566f;
+    --slideW:1080px;
+    --slideH:1350px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:#33414f}
+  body{font-family:"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;
+       color:var(--ink);line-height:1.5;padding:24px;display:flex;flex-direction:column;
+       align-items:center;gap:24px}
+
+  /* on-screen helper bar (hidden when printing) */
+  .toolbar{position:sticky;top:0;z-index:50;background:#0f1b27;color:#fff;
+    width:var(--slideW);max-width:100%;border-radius:14px;padding:14px 20px;
+    display:flex;align-items:center;gap:14px;font-size:.9rem;box-shadow:0 8px 24px rgba(0,0,0,.4)}
+  .toolbar b{color:#7ec2ff}
+  .toolbar .hint{opacity:.8}
+
+  /* ---- each slide = one PDF page ---- */
+  .slide{position:relative;width:var(--slideW);height:var(--slideH);
+    background:#fff;border-radius:26px;overflow:hidden;
+    box-shadow:0 18px 50px rgba(0,0,0,.45);
+    display:flex;flex-direction:column;padding:84px 78px 70px}
+  .slide::before{content:"";position:absolute;top:0;left:0;right:0;height:14px;
+    background:linear-gradient(90deg,var(--accent),var(--accent-dark))}
+
+  /* decorative soft circle */
+  .slide .blob{position:absolute;width:520px;height:520px;border-radius:50%;
+    right:-180px;top:-160px;background:radial-gradient(circle,var(--accent-soft),transparent 70%);
+    opacity:.9;pointer-events:none}
+
+  .kicker{color:var(--accent);font-weight:800;letter-spacing:4px;
+    text-transform:uppercase;font-size:1rem;margin-bottom:8px}
+  .slide h1{font-size:3.4rem;line-height:1.08;color:var(--accent-dark);margin-bottom:14px}
+  .slide h2{font-size:2.5rem;line-height:1.12;color:var(--accent-dark);
+    display:flex;align-items:center;gap:18px;margin-bottom:26px}
+  .slide h2 .n{flex:0 0 auto;width:64px;height:64px;border-radius:16px;
+    background:var(--accent);color:#fff;display:grid;place-items:center;
+    font-size:1.8rem;font-weight:800}
+  .slide h3{font-size:1.6rem;color:var(--accent-dark);margin:22px 0 8px}
+  .slide p{font-size:1.42rem;margin:8px 0;color:var(--ink)}
+  .slide p .mut{color:var(--muted)}
+  .slide ul{margin:6px 0 6px 4px;list-style:none}
+  .slide li{font-size:1.4rem;margin:12px 0;padding-left:38px;position:relative}
+  .slide li::before{content:"▸";position:absolute;left:6px;color:var(--accent);font-weight:800}
+
+  .lead{font-size:1.7rem;color:var(--muted);margin-top:6px;max-width:90%}
+
+  .callout{border-left:8px solid var(--accent);background:var(--accent-soft);
+    padding:24px 28px;border-radius:0 18px 18px 0;margin:26px 0;
+    font-size:1.55rem;font-weight:600;color:var(--accent-dark)}
+
+  /* pipeline */
+  .pipe{display:flex;flex-wrap:wrap;gap:18px 30px;margin:20px 0}
+  .stage{flex:1;min-width:160px;background:#fff;border:3px solid var(--accent);
+    border-radius:18px;padding:22px 14px;text-align:center;position:relative}
+  .stage .s{font-weight:800;color:var(--accent-dark);font-size:1.5rem;display:block;margin-bottom:6px}
+  .stage small{color:var(--muted);font-size:1.05rem}
+
+  .badges{display:flex;flex-wrap:wrap;gap:14px;margin:18px 0}
+  .badge{background:var(--accent-soft);color:var(--accent-dark);border:2px solid var(--line);
+    padding:14px 22px;border-radius:14px;font-size:1.35rem;font-weight:700}
+
+  .stats{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin:22px 0}
+  .stat{background:linear-gradient(160deg,#fff,var(--accent-soft));border:2px solid var(--line);
+    border-radius:20px;padding:28px 20px;text-align:center}
+  .stat .num{font-size:2.4rem;font-weight:800;color:var(--accent-dark)}
+  .stat .lbl{font-size:1.15rem;color:var(--muted);text-transform:uppercase;
+    letter-spacing:1px;margin-top:6px}
+
+  table{width:100%;border-collapse:collapse;margin:18px 0;font-size:1.4rem}
+  th,td{padding:18px 22px;text-align:left;border-bottom:2px solid var(--line)}
+  thead th{background:var(--accent);color:#fff;font-size:1.45rem}
+  tbody tr:nth-child(even){background:var(--accent-soft)}
+
+  .twocol{display:grid;grid-template-columns:1fr 1fr;gap:26px;margin:22px 0}
+  .panel{border:2px solid var(--line);border-radius:20px;padding:26px 28px;background:#fff}
+  .panel h4{font-size:1.6rem;margin-bottom:8px;color:var(--accent-dark)}
+  .panel.good{border-color:var(--good)} .panel.good h4{color:var(--good)}
+  .panel.bad{border-color:var(--bad)} .panel.bad h4{color:var(--bad)}
+
+  .essence{background:linear-gradient(160deg,var(--accent-soft),#fff);
+    border:2px solid var(--line);border-radius:22px;padding:34px 38px}
+  .essence h3{margin-top:0}
+
+  /* footer of every slide */
+  .sfoot{margin-top:auto;display:flex;justify-content:space-between;align-items:center;
+    padding-top:24px;border-top:2px solid var(--line);color:var(--muted);font-size:1.15rem}
+  .sfoot b{color:var(--accent-dark)}
+  .pageno{font-weight:800;color:var(--accent)}
+
+  /* cover slide */
+  .cover{background:radial-gradient(900px 600px at 80% -10%,rgba(0,113,197,.25),transparent 60%),
+                  linear-gradient(160deg,#04263f,#0071C5);color:#fff;justify-content:center}
+  .cover::before{background:linear-gradient(90deg,#7ec2ff,#fff)}
+  .cover .kicker{color:#bfe0ff}
+  .cover h1{color:#fff;font-size:5.2rem}
+  .cover .lead{color:#dbeeff;font-size:1.95rem}
+  .cover .big-emoji{font-size:6rem;margin-bottom:10px}
+  .cover .sfoot{border-top-color:rgba(255,255,255,.25);color:#cfe6ff}
+  .cover .sfoot b{color:#fff}
+  .cover .pageno{color:#bfe0ff}
+
+  /* closing CTA slide */
+  .cta{background:linear-gradient(160deg,#04263f,#0071C5);color:#fff;justify-content:center;text-align:center}
+  .cta::before{background:linear-gradient(90deg,#7ec2ff,#fff)}
+  .cta h2{color:#fff;justify-content:center}
+  .cta p{color:#dbeeff;font-size:1.7rem}
+  .cta .like{margin-top:30px;font-size:1.5rem;font-weight:700;color:#fff;
+    background:rgba(255,255,255,.14);border:2px solid rgba(255,255,255,.4);
+    border-radius:16px;padding:22px 28px;display:inline-block}
+  .cta .sfoot{border-top-color:rgba(255,255,255,.25);color:#cfe6ff}
+  .cta .sfoot b{color:#fff}
+  .cta .pageno{color:#bfe0ff}
+
+  /* ---- print: one slide per page, no shadows ---- */
+  @page{size:1080px 1350px;margin:0}
+  @media print{
+    html,body{background:#fff;padding:0;gap:0}
+    .toolbar{display:none !important}
+    .slide{border-radius:0;box-shadow:none;break-after:page;page-break-after:always;
+      margin:0;width:1080px;height:1350px}
+    .slide:last-child{break-after:auto;page-break-after:auto}
+  }
+</style>
+</head>
+<body>
+
+  <div class="toolbar no-print">
+    🖨️ <b>To export this LinkedIn carousel:</b>
+    <span class="hint">Press <b>Ctrl/Cmd&nbsp;+&nbsp;P</b> → Destination <b>Save as PDF</b> → Margins <b>None</b> → Background graphics <b>ON</b> → Save. Upload the PDF to LinkedIn as a <b>Document</b> post.</span>
+  </div>
+
+  <!-- 1 · COVER -->
+  <section class="slide cover">
+    <div class="big-emoji">🧠</div>
+    <div class="kicker">VLSI Architectures</div>
+    <h1>CPU</h1>
+    <p class="lead">The Central Processing Unit — the general-purpose brain that runs everything and orchestrates every other chip.</p>
+    <div class="sfoot"><span><b>Swipe →</b> to learn how the CPU works</span><span class="pageno">1 / 10</span></div>
+  </section>
+
+  <!-- 2 · INTRO -->
+  <section class="slide">
+    <div class="blob"></div>
+    <h2><span class="n">1</span> What is a CPU?</h2>
+    <p>A <strong>CPU</strong> is the <strong>general-purpose brain</strong> of a computer. It runs <em>any</em> program — OS, browser, game, database — executing instructions one after another, very quickly.</p>
+    <div class="callout">Think of it as <strong>one very smart person</strong> who can solve almost any problem, step by step.</div>
+    <h3>The main idea</h3>
+    <p>A <strong>few powerful cores</strong>, optimized for <strong>low latency</strong> and complex control — the opposite of a GPU. The CPU spends silicon being <em>smart about one instruction stream</em>.</p>
+    <div class="sfoot"><span><b>CPU</b> · Central Processing Unit</span><span class="pageno">2 / 10</span></div>
+  </section>
+
+  <!-- 3 · ORIGINS -->
+  <section class="slide">
+    <div class="blob"></div>
+    <h2><span class="n">2</span> Where CPUs came from</h2>
+    <p>The CPU is the <strong>oldest</strong> processor type.</p>
+    <div class="stats">
+      <div class="stat"><div class="num">Intel 4004</div><div class="lbl">first microprocessor · 1971</div></div>
+      <div class="stat"><div class="num">1945</div><div class="lbl">von Neumann architecture</div></div>
+    </div>
+    <p class="mut">The <strong>von Neumann model</strong> — one shared memory for both instructions and data — still underlies most CPUs today.</p>
+    <h3>Analogy: an expert craftsman</h3>
+    <p>If a GPU is a factory of thousands of workers, a CPU is <strong>one master craftsman</strong> with a huge toolbox — able to handle <em>any</em> job, but only a few at a time.</p>
+    <div class="sfoot"><span><b>CPU</b> · Origins &amp; idea</span><span class="pageno">3 / 10</span></div>
+  </section>
+
+  <!-- 4 · INSTRUCTION CYCLE -->
+  <section class="slide">
+    <div class="blob"></div>
+    <h2><span class="n">3</span> The instruction cycle</h2>
+    <p>Every instruction flows through five stages:</p>
+    <div class="pipe">
+      <div class="stage"><span class="s">Fetch</span><small>read instruction</small></div>
+      <div class="stage"><span class="s">Decode</span><small>interpret it</small></div>
+      <div class="stage"><span class="s">Execute</span><small>ALU math/logic</small></div>
+    </div>
+    <div class="pipe">
+      <div class="stage"><span class="s">Memory</span><small>read/write data</small></div>
+      <div class="stage"><span class="s">Write-back</span><small>store result</small></div>
+    </div>
+    <h3>What makes CPUs fast</h3>
+    <div class="badges">
+      <span class="badge">Pipelining</span>
+      <span class="badge">Branch prediction</span>
+      <span class="badge">Out-of-order execution</span>
+      <span class="badge">Superscalar</span>
+      <span class="badge">L1 / L2 / L3 caches</span>
+    </div>
+    <div class="sfoot"><span><b>CPU</b> · How it executes</span><span class="pageno">4 / 10</span></div>
+  </section>
+
+  <!-- 5 · SPECS -->
+  <section class="slide">
+    <div class="blob"></div>
+    <h2><span class="n">4</span> Cores, threads &amp; ISAs</h2>
+    <div class="stats">
+      <div class="stat"><div class="num">4–64</div><div class="lbl">cores</div></div>
+      <div class="stat"><div class="num">×2</div><div class="lbl">threads / core (SMT)</div></div>
+      <div class="stat"><div class="num">~100 GB/s</div><div class="lbl">DDR5 bandwidth</div></div>
+      <div class="stat"><div class="num">x86 · ARM · RISC-V</div><div class="lbl">instruction sets</div></div>
+    </div>
+    <div class="callout">CPUs pour silicon into being <strong>smart</strong> — not into raw core count.</div>
+    <div class="sfoot"><span><b>CPU</b> · Key numbers</span><span class="pageno">5 / 10</span></div>
+  </section>
+
+  <!-- 6 · CPU vs GPU -->
+  <section class="slide">
+    <div class="blob"></div>
+    <h2><span class="n">5</span> CPU vs GPU</h2>
+    <table>
+      <thead><tr><th>Feature</th><th>CPU</th><th>GPU</th></tr></thead>
+      <tbody>
+        <tr><td>Core count</td><td>8–64</td><td>10,000+</td></tr>
+        <tr><td>Clock speed</td><td>Very high</td><td>Moderate</td></tr>
+        <tr><td>Latency</td><td>Very low</td><td>Higher</td></tr>
+        <tr><td>Control logic</td><td>Complex</td><td>Simple</td></tr>
+        <tr><td>Best at</td><td>Logic &amp; branching</td><td>Parallel math</td></tr>
+      </tbody>
+    </table>
+    <div class="callout">CPUs make <strong>decisions</strong>. GPUs crunch <strong>numbers</strong>.</div>
+    <div class="sfoot"><span><b>CPU</b> · The key contrast</span><span class="pageno">6 / 10</span></div>
+  </section>
+
+  <!-- 7 · APPLICATIONS -->
+  <section class="slide">
+    <div class="blob"></div>
+    <h2><span class="n">6</span> Applications</h2>
+    <p>The CPU is the universal default — it runs <strong>essentially everything</strong>:</p>
+    <div class="badges">
+      <span class="badge">🖥️ Operating systems</span>
+      <span class="badge">🗄️ Databases</span>
+      <span class="badge">🌐 Web &amp; back-end</span>
+      <span class="badge">⚙️ Compilers &amp; scripting</span>
+      <span class="badge">🎛️ Orchestrating accelerators</span>
+    </div>
+    <div class="twocol">
+      <div class="panel good"><h4>✅ Great at</h4>
+        <ul><li>General-purpose logic</li><li>Low-latency single tasks</li><li>Branch-heavy control flow</li><li>Strong single-thread speed</li></ul></div>
+      <div class="panel bad"><h4>⛔ Not ideal for</h4>
+        <ul><li>Millions of identical ops → GPU</li><li>AI matrix math at scale → NPU/TPU</li><li>One fixed function → ASIC</li></ul></div>
+    </div>
+    <div class="sfoot"><span><b>CPU</b> · Where it shines</span><span class="pageno">7 / 10</span></div>
+  </section>
+
+  <!-- 8 · MARKET -->
+  <section class="slide">
+    <div class="blob"></div>
+    <h2><span class="n">7</span> Market players</h2>
+    <table>
+      <thead><tr><th>Vendor</th><th>Examples</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td>Intel</td><td>Core, Xeon</td><td>x86, long-time leader</td></tr>
+        <tr><td>AMD</td><td>Ryzen, EPYC</td><td>x86, chiplet pioneer</td></tr>
+        <tr><td>Apple</td><td>M-series</td><td>ARM SoCs, efficient</td></tr>
+        <tr><td>ARM</td><td>Cortex (licensed)</td><td>Most phones; rising in servers</td></tr>
+        <tr><td>RISC-V</td><td>SiFive &amp; others</td><td>Open ISA, emerging fast</td></tr>
+      </tbody>
+    </table>
+    <div class="sfoot"><span><b>CPU</b> · Who builds them</span><span class="pageno">8 / 10</span></div>
+  </section>
+
+  <!-- 9 · SUMMARY -->
+  <section class="slide">
+    <div class="blob"></div>
+    <h2><span class="n">8</span> CPU in one paragraph</h2>
+    <div class="essence">
+      <p>A CPU is the general-purpose brain of a computer: a handful of powerful cores built for <strong>low-latency, sequential, decision-heavy</strong> work. It pours silicon into pipelining, branch prediction, out-of-order execution, and deep caches so it can run <em>any</em> program well — trading raw parallel throughput for flexibility and fast single-task performance.</p>
+    </div>
+    <div class="twocol" style="margin-top:24px">
+      <div class="panel good"><h4>Choose a CPU for…</h4>
+        <ul><li>General-purpose computing</li><li>Control-heavy logic</li><li>Low-latency tasks</li><li>Orchestrating other chips</li></ul></div>
+      <div class="panel"><h4>Future trends</h4>
+        <ul><li>Chiplet scaling</li><li>Hybrid core designs</li><li>Tight accelerator integration</li><li>ARM &amp; RISC-V growth</li></ul></div>
+    </div>
+    <div class="sfoot"><span><b>CPU</b> · The takeaway</span><span class="pageno">9 / 10</span></div>
+  </section>
+
+  <!-- 10 · CLOSING -->
+  <section class="slide cta">
+    <div class="big-emoji" style="font-size:5rem;margin-bottom:8px">🧠</div>
+    <h2>The general-purpose brain</h2>
+    <p>A few powerful cores, built for low-latency, decision-heavy work — the chip that can run anything and orchestrates all the rest.</p>
+    <div class="sfoot"><span><b>CPU</b> · Central Processing Unit</span><span class="pageno">10 / 10</span></div>
+  </section>
+
+</body>
+</html>
