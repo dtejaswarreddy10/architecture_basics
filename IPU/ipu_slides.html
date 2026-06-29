@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IPU — LinkedIn Carousel</title>
+<style>
+  :root{
+    --accent:#E11D48;
+    --accent-dark:#9f1239;
+    --accent-soft:#ffe4ea;
+    --ink:#0f1b27;
+    --muted:#5a6b7b;
+    --line:#cfe0f1;
+    --good:#0d9488;
+    --bad:#e0566f;
+    --slideW:1080px;
+    --slideH:1350px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:#33414f}
+  body{font-family:"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;
+       color:var(--ink);line-height:1.5;padding:24px;display:flex;flex-direction:column;
+       align-items:center;gap:24px}
+
+  /* on-screen helper bar (hidden when printing) */
+  .toolbar{position:sticky;top:0;z-index:50;background:#0f1b27;color:#fff;
+    width:var(--slideW);max-width:100%;border-radius:14px;padding:14px 20px;
+    display:flex;align-items:center;gap:14px;font-size:.9rem;box-shadow:0 8px 24px rgba(0,0,0,.4)}
+  .toolbar b{color:#7ec2ff}
+  .toolbar .hint{opacity:.8}
+
+  /* ---- each slide = one PDF page ---- */
+  .slide{position:relative;width:var(--slideW);height:var(--slideH);
+    background:#fff;border-radius:26px;overflow:hidden;
+    box-shadow:0 18px 50px rgba(0,0,0,.45);
+    display:flex;flex-direction:column;padding:84px 78px 70px}
+  .slide::before{content:"";position:absolute;top:0;left:0;right:0;height:14px;
+    background:linear-gradient(90deg,var(--accent),var(--accent-dark))}
+
+  /* decorative soft circle */
+  .slide .blob{position:absolute;width:520px;height:520px;border-radius:50%;
+    right:-180px;top:-160px;background:radial-gradient(circle,var(--accent-soft),transparent 70%);
+    opacity:.9;pointer-events:none}
+
+  .kicker{color:var(--accent);font-weight:800;letter-spacing:4px;
+    text-transform:uppercase;font-size:1rem;margin-bottom:8px}
+  .slide h1{font-size:3.4rem;line-height:1.08;color:var(--accent-dark);margin-bottom:14px}
+  .slide h2{font-size:2.5rem;line-height:1.12;color:var(--accent-dark);
+    display:flex;align-items:center;gap:18px;margin-bottom:26px}
+  .slide h2 .n{flex:0 0 auto;width:64px;height:64px;border-radius:16px;
+    background:var(--accent);color:#fff;display:grid;place-items:center;
+    font-size:1.8rem;font-weight:800}
+  .slide h3{font-size:1.6rem;color:var(--accent-dark);margin:22px 0 8px}
+  .slide p{font-size:1.42rem;margin:8px 0;color:var(--ink)}
+  .slide p .mut{color:var(--muted)}
+  .slide ul{margin:6px 0 6px 4px;list-style:none}
+  .slide li{font-size:1.4rem;margin:12px 0;padding-left:38px;position:relative}
+  .slide li::before{content:"▸";position:absolute;left:6px;color:var(--accent);font-weight:800}
+
+  .lead{font-size:1.7rem;color:var(--muted);margin-top:6px;max-width:90%}
+
+  .callout{border-left:8px solid var(--accent);background:var(--accent-soft);
+    padding:24px 28px;border-radius:0 18px 18px 0;margin:26px 0;
+    font-size:1.55rem;font-weight:600;color:var(--accent-dark)}
+
+  /* pipeline */
+  .pipe{display:flex;flex-wrap:wrap;gap:18px 30px;margin:20px 0}
+  .stage{flex:1;min-width:160px;background:#fff;border:3px solid var(--accent);
+    border-radius:18px;padding:22px 14px;text-align:center;position:relative}
+  .stage .s{font-weight:800;color:var(--accent-dark);font-size:1.5rem;display:block;margin-bottom:6px}
+  .stage small{color:var(--muted);font-size:1.05rem}
+
+  .badges{display:flex;flex-wrap:wrap;gap:14px;margin:18px 0}
+  .badge{background:var(--accent-soft);color:var(--accent-dark);border:2px solid var(--line);
+    padding:14px 22px;border-radius:14px;font-size:1.35rem;font-weight:700}
+
+  .stats{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin:22px 0}
+  .stat{background:linear-gradient(160deg,#fff,var(--accent-soft));border:2px solid var(--line);
+    border-radius:20px;padding:28px 20px;text-align:center}
+  .stat .num{font-size:2.4rem;font-weight:800;color:var(--accent-dark)}
+  .stat .lbl{font-size:1.15rem;color:var(--muted);text-transform:uppercase;
+    letter-spacing:1px;margin-top:6px}
+
+  table{width:100%;border-collapse:collapse;margin:18px 0;font-size:1.4rem}
+  th,td{padding:18px 22px;text-align:left;border-bottom:2px solid var(--line)}
+  thead th{background:var(--accent);color:#fff;font-size:1.45rem}
+  tbody tr:nth-child(even){background:var(--accent-soft)}
+
+  .twocol{display:grid;grid-template-columns:1fr 1fr;gap:26px;margin:22px 0}
+  .panel{border:2px solid var(--line);border-radius:20px;padding:26px 28px;background:#fff}
+  .panel h4{font-size:1.6rem;margin-bottom:8px;color:var(--accent-dark)}
+  .panel.good{border-color:var(--good)} .panel.good h4{color:var(--good)}
+  .panel.bad{border-color:var(--bad)} .panel.bad h4{color:var(--bad)}
+
+  .essence{background:linear-gradient(160deg,var(--accent-soft),#fff);
+    border:2px solid var(--line);border-radius:22px;padding:34px 38px}
+  .essence h3{margin-top:0}
+
+  /* footer of every slide */
+  .sfoot{margin-top:auto;display:flex;justify-content:space-between;align-items:center;
+    padding-top:24px;border-top:2px solid var(--line);color:var(--muted);font-size:1.15rem}
+  .sfoot b{color:var(--accent-dark)}
+  .pageno{font-weight:800;color:var(--accent)}
+
+  /* cover slide */
+  .cover{background:radial-gradient(900px 600px at 80% -10%,rgba(255,255,255,.16),transparent 60%),
+                  linear-gradient(160deg,#0c1620,var(--accent-dark) 55%,var(--accent));color:#fff;justify-content:center}
+  .cover::before{background:linear-gradient(90deg,#fff,rgba(255,255,255,.45))}
+  .cover .kicker{color:rgba(255,255,255,.82)}
+  .cover h1{color:#fff;font-size:5.2rem}
+  .cover .lead{color:rgba(255,255,255,.9);font-size:1.95rem}
+  .cover .big-emoji{font-size:6rem;margin-bottom:10px}
+  .cover .sfoot{border-top-color:rgba(255,255,255,.25);color:rgba(255,255,255,.78)}
+  .cover .sfoot b{color:#fff}
+  .cover .pageno{color:rgba(255,255,255,.82)}
+
+  /* closing CTA slide */
+  .cta{background:linear-gradient(160deg,#0c1620,var(--accent-dark) 55%,var(--accent));color:#fff;justify-content:center;text-align:center}
+  .cta::before{background:linear-gradient(90deg,#fff,rgba(255,255,255,.45))}
+  .cta h2{color:#fff;justify-content:center}
+  .cta p{color:rgba(255,255,255,.9);font-size:1.7rem}
+  .cta .like{margin-top:30px;font-size:1.5rem;font-weight:700;color:#fff;
+    background:rgba(255,255,255,.14);border:2px solid rgba(255,255,255,.4);
+    border-radius:16px;padding:22px 28px;display:inline-block}
+  .cta .sfoot{border-top-color:rgba(255,255,255,.25);color:rgba(255,255,255,.78)}
+  .cta .sfoot b{color:#fff}
+  .cta .pageno{color:rgba(255,255,255,.82)}
+
+  /* ---- print: one slide per page, no shadows ---- */
+  @page{size:1080px 1350px;margin:0}
+  @media print{
+    html,body{background:#fff;padding:0;gap:0}
+    .toolbar{display:none !important}
+    .slide{border-radius:0;box-shadow:none;break-after:page;page-break-after:always;
+      margin:0;width:1080px;height:1350px}
+    .slide:last-child{break-after:auto;page-break-after:auto}
+  }
+</style>
+</head>
+<body>
+
+  <div class="toolbar no-print">
+    🖨️ <b>To export this LinkedIn carousel:</b>
+    <span class="hint">Press <b>Ctrl/Cmd&nbsp;+&nbsp;P</b> → Destination <b>Save as PDF</b> → Margins <b>None</b> → Background graphics <b>ON</b> → Save. Upload the PDF to LinkedIn as a <b>Document</b> post.</span>
+  </div>
+
+  <!-- 1 · COVER -->
+  <section class="slide cover">
+    <div class="big-emoji">🧩</div>
+    <div class="kicker">VLSI Architectures</div>
+    <h1>IPU</h1>
+    <p class="lead">The Intelligence Processing Unit — a massively parallel AI chip built around thousands of independent cores and huge on-chip memory, made for fine-grained, irregular work.</p>
+    <div class="sfoot"><span><b>Swipe →</b> to learn how the IPU works</span><span class="pageno">1 / 10</span></div>
+  </section>
+
+  <!-- 2 · INTRO -->
+  <section class="slide">
+    <div class="blob"></div>
+    <h2><span class="n">1</span> What is an IPU?</h2>
+    <p>An <strong>IPU (Intelligence Processing Unit)</strong> is an AI accelerator from <strong>Graphcore</strong>, designed from scratch for machine intelligence. It targets <strong>fine-grained parallelism</strong> — thousands of cores each doing their <em>own</em> work on data held in on-chip memory.</p>
+    <div class="callout">A GPU runs the <strong>same</strong> op across cores (SIMT); an IPU runs <strong>different</strong> ops — <strong>MIMD</strong>.</div>
+    <h3>The main idea</h3>
+    <p>Keep the <strong>whole model on-chip</strong>, and let <strong>every core run independently</strong> — avoiding slow external-memory trips and handling sparse, irregular work that stalls a GPU.</p>
+    <div class="sfoot"><span><b>IPU</b> · Intelligence Processing Unit</span><span class="pageno">2 / 10</span></div>
+  </section>
+
+  <!-- 3 · ORIGINS -->
+  <section class="slide">
+    <div class="blob"></div>
+    <h2><span class="n">2</span> Where IPUs came from</h2>
+    <p>The IPU maps AI's <strong>computational graphs</strong> directly onto hardware — which is exactly where the chip gets its name.</p>
+    <div class="stats">
+      <div class="stat"><div class="num">2016</div><div class="lbl">Graphcore founded · Bristol UK</div></div>
+      <div class="stat"><div class="num">MIMD</div><div class="lbl">cores run independently</div></div>
+    </div>
+    <p class="mut">Graphcore argued that AI models are really <strong>computational graphs</strong> full of irregular, sparse operations — a poor fit for the GPU's lock-step model.</p>
+    <h3>Analogy: a huge open-plan office</h3>
+    <p>A GPU is an army marching in perfect step. An IPU is a <strong>huge office of thousands of workers</strong>, each with their own desk and notebook (local SRAM), free to work on <em>different</em> tasks — then everyone pauses to swap notes.</p>
+    <div class="sfoot"><span><b>IPU</b> · Origins &amp; idea</span><span class="pageno">3 / 10</span></div>
+  </section>
+
+  <!-- 4 · ARCHITECTURE -->
+  <section class="slide">
+    <div class="blob"></div>
+    <h2><span class="n">3</span> Tiles &amp; the BSP cycle</h2>
+    <p>The IPU is built from <strong>thousands of tiles</strong> — each a small core with its <strong>own local SRAM</strong>, free to run a different program.</p>
+    <h3>Execution model: Bulk Synchronous Parallel</h3>
+    <div class="pipe">
+      <div class="stage"><span class="s">Compute</span><small>tiles work locally</small></div>
+      <div class="stage"><span class="s">Sync</span><small>barrier — all tiles</small></div>
+      <div class="stage"><span class="s">Exchange</span><small>swap data on-chip</small></div>
+    </div>
+    <div class="callout">The clean <strong>compute → sync → exchange</strong> cycle makes massive parallelism predictable.</div>
+    <div class="sfoot"><span><b>IPU</b> · How it executes</span><span class="pageno">4 / 10</span></div>
+  </section>
+
+  <!-- 5 · SPECS -->
+  <section class="slide">
+    <div class="blob"></div>
+    <h2><span class="n">4</span> By the numbers</h2>
+    <div class="stats">
+      <div class="stat"><div class="num">1,472</div><div class="lbl">tiles (GC200)</div></div>
+      <div class="stat"><div class="num">~900 MB</div><div class="lbl">on-chip SRAM</div></div>
+      <div class="stat"><div class="num">~8,800</div><div class="lbl">parallel threads</div></div>
+      <div class="stat"><div class="num">MIMD</div><div class="lbl">independent cores</div></div>
+    </div>
+    <div class="callout">The IPU keeps the <strong>entire model on-chip</strong> — so cores rarely wait on external memory.</div>
+    <div class="sfoot"><span><b>IPU</b> · Key numbers</span><span class="pageno">5 / 10</span></div>
+  </section>
+
+  <!-- 6 · IPU vs GPU -->
+  <section class="slide">
+    <div class="blob"></div>
+    <h2><span class="n">5</span> IPU vs GPU</h2>
+    <table>
+      <thead><tr><th>Feature</th><th>GPU</th><th>IPU</th></tr></thead>
+      <tbody>
+        <tr><td>Parallelism</td><td>SIMT (same op)</td><td>MIMD (independent)</td></tr>
+        <tr><td>Memory</td><td>External HBM</td><td>Massive on-chip SRAM</td></tr>
+        <tr><td>Best at</td><td>Dense matrix math</td><td>Sparse / fine-grained / graphs</td></tr>
+        <tr><td>Execution</td><td>Warps / lock-step</td><td>Bulk Synchronous Parallel</td></tr>
+        <tr><td>Software</td><td>CUDA</td><td>Poplar</td></tr>
+      </tbody>
+    </table>
+    <div class="callout">GPUs run one op in <strong>lock-step</strong>. IPUs let every core <strong>think for itself</strong>.</div>
+    <div class="sfoot"><span><b>IPU</b> · The key contrast</span><span class="pageno">6 / 10</span></div>
+  </section>
+
+  <!-- 7 · APPLICATIONS -->
+  <section class="slide">
+    <div class="blob"></div>
+    <h2><span class="n">6</span> Applications</h2>
+    <p>The IPU shines on irregular, sparse, <strong>graph-shaped</strong> AI:</p>
+    <div class="badges">
+      <span class="badge">🕸️ Graph neural networks</span>
+      <span class="badge">🧠 Sparse / fine-grained models</span>
+      <span class="badge">🔬 Research AI</span>
+      <span class="badge">💹 Low-latency finance</span>
+      <span class="badge">🧫 Molecular modeling</span>
+    </div>
+    <div class="twocol">
+      <div class="panel good"><h4>✅ Why pick an IPU</h4>
+        <ul><li>Huge on-chip memory bandwidth</li><li>Independent cores for irregular work</li><li>Strong on non-dense-matmul models</li><li>Clean graph programming (Poplar)</li></ul></div>
+      <div class="panel bad"><h4>⛔ Not ideal for</h4>
+        <ul><li>Peak dense matmul → GPU/TPU</li><li>Broadest ecosystem (CUDA wins)</li><li>Already GPU-tuned workloads</li></ul></div>
+    </div>
+    <div class="sfoot"><span><b>IPU</b> · Where it shines</span><span class="pageno">7 / 10</span></div>
+  </section>
+
+  <!-- 8 · MARKET -->
+  <section class="slide">
+    <div class="blob"></div>
+    <h2><span class="n">7</span> Market &amp; future</h2>
+    <table>
+      <thead><tr><th>Item</th><th>Note</th></tr></thead>
+      <tbody>
+        <tr><td>Colossus MK2 (GC200)</td><td>1,472 tiles, ~900 MB SRAM</td></tr>
+        <tr><td>Bow IPU</td><td>First processor to use wafer-on-wafer 3D stacking</td></tr>
+        <tr><td>IPU-POD systems</td><td>Racks of IPUs for data-center scale</td></tr>
+        <tr><td>Poplar SDK</td><td>Graph compiler &amp; libraries (the "CUDA of IPUs")</td></tr>
+      </tbody>
+    </table>
+    <div class="callout"><strong>Reality check:</strong> a high-profile NVIDIA challenger that found the CUDA ecosystem hard to displace — in <strong>2024 Graphcore was acquired by SoftBank</strong>.</div>
+    <div class="sfoot"><span><b>IPU</b> · Who builds them</span><span class="pageno">8 / 10</span></div>
+  </section>
+
+  <!-- 9 · SUMMARY -->
+  <section class="slide">
+    <div class="blob"></div>
+    <h2><span class="n">8</span> IPU in one paragraph</h2>
+    <div class="essence">
+      <p>The IPU is Graphcore's AI processor built around <strong>thousands of independent (MIMD) cores</strong> and <strong>huge on-chip SRAM</strong>, executing in a clean <strong>Bulk Synchronous Parallel</strong> cycle. By keeping entire models on-chip and letting cores run their own programs, it targets <strong>fine-grained and sparse</strong> AI workloads that don't map neatly onto a GPU's lock-step matrix engines — technically distinctive, though challenged by CUDA's dominance and now backed by SoftBank.</p>
+    </div>
+    <div class="twocol" style="margin-top:24px">
+      <div class="panel good"><h4>Interesting when…</h4>
+        <ul><li>Your model is sparse / graph-like</li><li>You want on-chip memory bandwidth</li><li>You want independent per-core execution</li></ul></div>
+      <div class="panel"><h4>Future trends</h4>
+        <ul><li>SoftBank-backed development</li><li>Deeper bets on sparsity</li><li>3D wafer-on-wafer stacking</li><li>Lessons for AI-silicon startups</li></ul></div>
+    </div>
+    <div class="sfoot"><span><b>IPU</b> · The takeaway</span><span class="pageno">9 / 10</span></div>
+  </section>
+
+  <!-- 10 · CLOSING -->
+  <section class="slide cta">
+    <div class="big-emoji" style="font-size:5rem;margin-bottom:8px">🧩</div>
+    <h2>The graph-native AI processor</h2>
+    <p>Thousands of independent cores and huge on-chip memory, running entire models on-chip — built for the fine-grained, sparse work that stalls a GPU.</p>
+    <div class="sfoot"><span><b>IPU</b> · Intelligence Processing Unit</span><span class="pageno">10 / 10</span></div>
+  </section>
+
+</body>
+</html>
