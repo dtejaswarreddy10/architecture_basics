@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MTIA — LinkedIn Carousel</title>
+<style>
+  :root{
+    --accent:#2563EB;        /* Meta blue */
+    --accent-dark:#1d4ed8;
+    --accent-soft:#dbe6fe;
+    --ink:#0f1b27;
+    --muted:#5a6b7b;
+    --line:#cfe0f1;
+    --good:#0d9488;
+    --bad:#e0566f;
+    --slideW:1080px;
+    --slideH:1350px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:#33414f}
+  body{font-family:"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;
+       color:var(--ink);line-height:1.5;padding:24px;display:flex;flex-direction:column;
+       align-items:center;gap:24px}
+
+  /* on-screen helper bar (hidden when printing) */
+  .toolbar{position:sticky;top:0;z-index:50;background:#0f1b27;color:#fff;
+    width:var(--slideW);max-width:100%;border-radius:14px;padding:14px 20px;
+    display:flex;align-items:center;gap:14px;font-size:.9rem;box-shadow:0 8px 24px rgba(0,0,0,.4)}
+  .toolbar b{color:#7ec2ff}
+  .toolbar .hint{opacity:.8}
+
+  /* ---- each slide = one PDF page ---- */
+  .slide{position:relative;width:var(--slideW);height:var(--slideH);
+    background:#fff;border-radius:26px;overflow:hidden;
+    box-shadow:0 18px 50px rgba(0,0,0,.45);
+    display:flex;flex-direction:column;padding:84px 78px 70px}
+  .slide::before{content:"";position:absolute;top:0;left:0;right:0;height:14px;
+    background:linear-gradient(90deg,var(--accent),var(--accent-dark))}
+
+  /* decorative soft circle */
+  .slide .blob{position:absolute;width:520px;height:520px;border-radius:50%;
+    right:-180px;top:-160px;background:radial-gradient(circle,var(--accent-soft),transparent 70%);
+    opacity:.9;pointer-events:none}
+
+  .kicker{color:var(--accent);font-weight:800;letter-spacing:4px;
+    text-transform:uppercase;font-size:1rem;margin-bottom:8px}
+  .slide h1{font-size:3.4rem;line-height:1.08;color:var(--accent-dark);margin-bottom:14px}
+  .slide h2{font-size:2.5rem;line-height:1.12;color:var(--accent-dark);
+    display:flex;align-items:center;gap:18px;margin-bottom:26px}
+  .slide h2 .n{flex:0 0 auto;width:64px;height:64px;border-radius:16px;
+    background:var(--accent);color:#fff;display:grid;place-items:center;
+    font-size:1.8rem;font-weight:800}
+  .slide h3{font-size:1.6rem;color:var(--accent-dark);margin:22px 0 8px}
+  .slide p{font-size:1.42rem;margin:8px 0;color:var(--ink)}
+  .slide p .mut{color:var(--muted)}
+  .slide ul{margin:6px 0 6px 4px;list-style:none}
+  .slide li{font-size:1.4rem;margin:12px 0;padding-left:38px;position:relative}
+  .slide li::before{content:"▸";position:absolute;left:6px;color:var(--accent);font-weight:800}
+
+  .lead{font-size:1.7rem;color:var(--muted);margin-top:6px;max-width:90%}
+
+  .callout{border-left:8px solid var(--accent);background:var(--accent-soft);
+    padding:24px 28px;border-radius:0 18px 18px 0;margin:26px 0;
+    font-size:1.55rem;font-weight:600;color:var(--accent-dark)}
+
+  /* pipeline */
+  .pipe{display:flex;flex-wrap:wrap;gap:18px 30px;margin:20px 0}
+  .stage{flex:1;min-width:160px;background:#fff;border:3px solid var(--accent);
+    border-radius:18px;padding:22px 14px;text-align:center;position:relative}
+  .stage .s{font-weight:800;color:var(--accent-dark);font-size:1.5rem;display:block;margin-bottom:6px}
+  .stage small{color:var(--muted);font-size:1.05rem}
+
+  .badges{display:flex;flex-wrap:wrap;gap:14px;margin:18px 0}
+  .badge{background:var(--accent-soft);color:var(--accent-dark);border:2px solid var(--line);
+    padding:14px 22px;border-radius:14px;font-size:1.35rem;font-weight:700}
+
+  .stats{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin:22px 0}
+  .stat{background:linear-gradient(160deg,#fff,var(--accent-soft));border:2px solid var(--line);
+    border-radius:20px;padding:28px 20px;text-align:center}
+  .stat .num{font-size:2.4rem;font-weight:800;color:var(--accent-dark)}
+  .stat .lbl{font-size:1.15rem;color:var(--muted);text-transform:uppercase;
+    letter-spacing:1px;margin-top:6px}
+
+  table{width:100%;border-collapse:collapse;margin:18px 0;font-size:1.4rem}
+  th,td{padding:18px 22px;text-align:left;border-bottom:2px solid var(--line)}
+  thead th{background:var(--accent);color:#fff;font-size:1.45rem}
+  tbody tr:nth-child(even){background:var(--accent-soft)}
+
+  .twocol{display:grid;grid-template-columns:1fr 1fr;gap:26px;margin:22px 0}
+  .panel{border:2px solid var(--line);border-radius:20px;padding:26px 28px;background:#fff}
+  .panel h4{font-size:1.6rem;margin-bottom:8px;color:var(--accent-dark)}
+  .panel.good{border-color:var(--good)} .panel.good h4{color:var(--good)}
+  .panel.bad{border-color:var(--bad)} .panel.bad h4{color:var(--bad)}
+
+  .essence{background:linear-gradient(160deg,var(--accent-soft),#fff);
+    border:2px solid var(--line);border-radius:22px;padding:34px 38px}
+  .essence h3{margin-top:0}
+
+  /* footer of every slide */
+  .sfoot{margin-top:auto;display:flex;justify-content:space-between;align-items:center;
+    padding-top:24px;border-top:2px solid var(--line);color:var(--muted);font-size:1.15rem}
+  .sfoot b{color:var(--accent-dark)}
+  .pageno{font-weight:800;color:var(--accent)}
+
+  /* cover slide */
+  .cover{background:radial-gradient(900px 600px at 80% -10%,rgba(255,255,255,.16),transparent 60%),
+                  linear-gradient(160deg,#0c1620,var(--accent-dark) 55%,var(--accent));color:#fff;justify-content:center}
+  .cover::before{background:linear-gradient(90deg,#fff,rgba(255,255,255,.45))}
+  .cover .kicker{color:rgba(255,255,255,.82)}
+  .cover h1{color:#fff;font-size:5.2rem}
+  .cover .lead{color:rgba(255,255,255,.9);font-size:1.95rem}
+  .cover .big-emoji{font-size:6rem;margin-bottom:10px}
+  .cover .sfoot{border-top-color:rgba(255,255,255,.25);color:rgba(255,255,255,.78)}
+  .cover .sfoot b{color:#fff}
+  .cover .pageno{color:rgba(255,255,255,.82)}
+
+  /* closing CTA slide */
+  .cta{background:linear-gradient(160deg,#0c1620,var(--accent-dark) 55%,var(--accent));color:#fff;justify-content:center;text-align:center}
+  .cta::before{background:linear-gradient(90deg,#fff,rgba(255,255,255,.45))}
+  .cta h2{color:#fff;justify-content:center}
+  .cta p{color:rgba(255,255,255,.9);font-size:1.7rem}
+  .cta .like{margin-top:30px;font-size:1.5rem;font-weight:700;color:#fff;
+    background:rgba(255,255,255,.14);border:2px solid rgba(255,255,255,.4);
+    border-radius:16px;padding:22px 28px;display:inline-block}
+  .cta .sfoot{border-top-color:rgba(255,255,255,.25);color:rgba(255,255,255,.78)}
+  .cta .sfoot b{color:#fff}
+  .cta .pageno{color:rgba(255,255,255,.82)}
+
+  /* ---- print: one slide per page, no shadows ---- */
+  @page{size:1080px 1350px;margin:0}
+  @media print{
+    html,body{background:#fff;padding:0;gap:0}
+    .toolbar{display:none !important}
+    .slide{border-radius:0;box-shadow:none;break-after:page;page-break-after:always;
+      margin:0;width:1080px;height:1350px}
+    .slide:last-child{break-after:auto;page-break-after:auto}
+  }
+</style>
+</head>
+<body>
+
+  <div class="toolbar no-print">
+    🖨️ <b>To export this LinkedIn carousel:</b>
+    <span class="hint">Press <b>Ctrl/Cmd&nbsp;+&nbsp;P</b> → Destination <b>Save as PDF</b> → Margins <b>None</b> → Background graphics <b>ON</b> → Save. Upload the PDF to LinkedIn as a <b>Document</b> post.</span>
+  </div>
+
+  <!-- 1 · COVER -->
+  <section class="slide cover">
+    <div class="big-emoji">📰</div>
+    <div class="kicker">VLSI Architectures</div>
+    <h1>MTIA</h1>
+    <p class="lead">Meta's own in-house AI chip, built first to run the recommendation and ranking models that power Feed, Reels, and Ads — efficiently, at Meta's enormous scale.</p>
+    <div class="sfoot"><span><b>Swipe →</b> to see how Meta's AI chip works</span><span class="pageno">1 / 10</span></div>
+  </section>
+
+  <!-- 2 · INTRO -->
+  <section class="slide">
+    <div class="blob"></div>
+    <h2><span class="n">1</span> What is MTIA?</h2>
+    <p><strong>MTIA</strong> (Meta Training and Inference Accelerator) is a family of <strong>custom AI chips designed by Meta</strong>. The first generations focus on <strong>inference</strong> for the <strong>deep learning recommendation models (DLRMs)</strong> that decide what you see in your feed, which Reels to show, and which ads to serve.</p>
+    <div class="callout">Silicon built <strong>by Meta, for Meta's workloads</strong>.</div>
+    <h3>The main idea</h3>
+    <p>Match the silicon to Meta's <strong>dominant workload — recommendation</strong> — for better <strong>performance-per-watt</strong> and lower cost.</p>
+    <div class="sfoot"><span><b>MTIA</b> · Meta Training and Inference Accelerator</span><span class="pageno">2 / 10</span></div>
+  </section>
+
+  <!-- 3 · ORIGINS -->
+  <section class="slide">
+    <div class="blob"></div>
+    <h2><span class="n">2</span> Where MTIA came from</h2>
+    <p>Meta runs recommendation models <strong>billions of times a day</strong>. GPUs are powerful but not always the most <strong>efficient or cost-effective</strong> fit for these specific models — so Meta designed its <strong>own accelerator</strong>, shaped around the exact math and memory patterns its ranking systems need.</p>
+    <div class="stats">
+      <div class="stat"><div class="num">Billions/day</div><div class="lbl">recommendation model runs</div></div>
+      <div class="stat"><div class="num">In-house</div><div class="lbl">Meta's own accelerator</div></div>
+    </div>
+    <h3>Analogy: a kitchen for one signature dish</h3>
+    <p>A general kitchen can cook anything but isn't optimized for any one dish. MTIA is a kitchen <strong>purpose-built for Meta's signature dish</strong> — recommendation models — making that one thing <em>faster and cheaper</em>.</p>
+    <div class="sfoot"><span><b>MTIA</b> · Origins &amp; idea</span><span class="pageno">3 / 10</span></div>
+  </section>
+
+  <!-- 4 · ARCHITECTURE -->
+  <section class="slide">
+    <div class="blob"></div>
+    <h2><span class="n">3</span> A grid of Processing Elements</h2>
+    <p>MTIA is built as a <strong>2-D grid of Processing Elements (PEs)</strong> surrounded by <strong>on-chip memory</strong>. Work spreads across the grid; memory keeps data close for <strong>embedding-heavy</strong> recommendation models.</p>
+    <h3>The building blocks</h3>
+    <div class="pipe">
+      <div class="stage"><span class="s">Grid of PEs</span><small>compute units do the math</small></div>
+      <div class="stage"><span class="s">On-chip SRAM</span><small>keeps data close to the PEs</small></div>
+      <div class="stage"><span class="s">Memory bandwidth</span><small>feeds embedding-heavy models</small></div>
+      <div class="stage"><span class="s">PyTorch</span><small>models map onto the grid</small></div>
+    </div>
+    <div class="sfoot"><span><b>MTIA</b> · Architecture</span><span class="pageno">4 / 10</span></div>
+  </section>
+
+  <!-- 5 · WHAT MAKES IT EFFICIENT -->
+  <section class="slide">
+    <div class="blob"></div>
+    <h2><span class="n">4</span> What makes MTIA efficient</h2>
+    <div class="stats">
+      <div class="stat"><div class="num">Perf/watt</div><div class="lbl">primary design goal</div></div>
+      <div class="stat"><div class="num">Lower cost</div><div class="lbl">for Meta's workload</div></div>
+      <div class="stat"><div class="num">v1 → v2</div><div class="lbl">2023 → 2024</div></div>
+      <div class="stat"><div class="num">PyTorch</div><div class="lbl">co-designed stack</div></div>
+    </div>
+    <div class="callout">By co-designing the chip with its <strong>PyTorch</strong> stack and models, Meta squeezes more efficiency from <strong>every watt and dollar</strong>.</div>
+    <div class="sfoot"><span><b>MTIA</b> · What makes it efficient</span><span class="pageno">5 / 10</span></div>
+  </section>
+
+  <!-- 6 · MTIA vs GPU -->
+  <section class="slide">
+    <div class="blob"></div>
+    <h2><span class="n">5</span> MTIA vs GPU</h2>
+    <table>
+      <thead><tr><th>Feature</th><th>GPU</th><th>MTIA</th></tr></thead>
+      <tbody>
+        <tr><td>Designed for</td><td>General AI</td><td>Meta's recommendation models</td></tr>
+        <tr><td>Goal</td><td>Peak flexibility</td><td>Perf-per-watt &amp; cost</td></tr>
+        <tr><td>Compute</td><td>CUDA + Tensor Cores</td><td>Grid of PEs</td></tr>
+        <tr><td>Software</td><td>CUDA</td><td>PyTorch (co-designed)</td></tr>
+        <tr><td>Availability</td><td>Buy / rent</td><td>Internal to Meta</td></tr>
+      </tbody>
+    </table>
+    <div class="callout">GPUs aim for <strong>general-AI flexibility</strong>. MTIA targets <strong>perf-per-watt and cost</strong> for Meta's recommendation models.</div>
+    <div class="sfoot"><span><b>MTIA</b> · The key contrast</span><span class="pageno">6 / 10</span></div>
+  </section>
+
+  <!-- 7 · APPLICATIONS -->
+  <section class="slide">
+    <div class="blob"></div>
+    <h2><span class="n">6</span> Applications</h2>
+    <div class="badges">
+      <span class="badge">📰 Feed ranking</span>
+      <span class="badge">🎬 Reels / video recommendation</span>
+      <span class="badge">📢 Ads ranking &amp; targeting</span>
+      <span class="badge">🔎 DLRM inference at scale</span>
+      <span class="badge">🧠 Expanding to GenAI</span>
+    </div>
+    <div class="twocol">
+      <div class="panel good"><h4>✅ Why Meta built it</h4>
+        <ul><li><strong>Efficiency</strong> (perf-per-watt) for its main workload</li><li><strong>Lower cost</strong> than GPUs for everything</li><li><strong>Co-design</strong> with PyTorch &amp; models</li><li><strong>Control</strong> over its compute roadmap</li></ul></div>
+      <div class="panel bad"><h4>⛔ Not for</h4>
+        <ul><li>A chip you can <strong>buy or rent</strong></li><li>General computing → CPU</li><li>Graphics → GPU</li><li>Broadest third-party ecosystem (CUDA)</li></ul></div>
+    </div>
+    <div class="sfoot"><span><b>MTIA</b> · Where it's used</span><span class="pageno">7 / 10</span></div>
+  </section>
+
+  <!-- 8 · MARKET & FUTURE -->
+  <section class="slide">
+    <div class="blob"></div>
+    <h2><span class="n">7</span> Market &amp; future</h2>
+    <table>
+      <thead><tr><th>Item</th><th>Note</th></tr></thead>
+      <tbody>
+        <tr><td>MTIA v1 (2023)</td><td>First-gen — inference for recommendation models</td></tr>
+        <tr><td>MTIA v2 (2024)</td><td>More compute &amp; bandwidth, better perf/watt</td></tr>
+        <tr><td>PyTorch stack</td><td>Tight integration — models map onto the PE grid</td></tr>
+        <tr><td>Meta data centers</td><td>Deployed alongside GPUs in Meta's fleet</td></tr>
+      </tbody>
+    </table>
+    <div class="callout">MTIA reflects the hyperscaler trend of building <strong>in-house silicon</strong> for dominant workloads — used <strong>alongside GPUs</strong>, expanding from recommendation toward <strong>GenAI</strong>.</div>
+    <div class="sfoot"><span><b>MTIA</b> · Market &amp; future</span><span class="pageno">8 / 10</span></div>
+  </section>
+
+  <!-- 9 · SUMMARY -->
+  <section class="slide">
+    <div class="blob"></div>
+    <h2><span class="n">8</span> MTIA in one paragraph</h2>
+    <div class="essence">
+      <p>MTIA is <strong>Meta's in-house AI accelerator</strong>, designed first to run the <strong>recommendation and ranking models (DLRMs)</strong> behind Feed, Reels, and Ads. Organized as a <strong>grid of Processing Elements</strong> with on-chip memory and tight <strong>PyTorch</strong> integration, it targets <strong>performance-per-watt and cost efficiency</strong> for Meta's dominant workload — used alongside GPUs and expanding from inference toward training and GenAI.</p>
+    </div>
+    <div class="twocol" style="margin-top:24px">
+      <div class="panel good"><h4>Custom inference silicon fits when…</h4>
+        <ul><li>You have a <strong>dominant, high-volume workload</strong></li><li><strong>Cost-per-inference</strong> is critical at scale</li><li>You can <strong>co-design</strong> HW with your software</li><li>You want to <strong>reduce GPU dependence</strong></li></ul></div>
+      <div class="panel"><h4>Future trends</h4>
+        <ul><li>More in-house accelerators at hyperscalers</li><li>Recommendation → GenAI expansion</li><li>Performance-per-watt leadership race</li><li>Tighter framework/hardware co-design</li></ul></div>
+    </div>
+    <div class="sfoot"><span><b>MTIA</b> · The takeaway</span><span class="pageno">9 / 10</span></div>
+  </section>
+
+  <!-- 10 · CLOSING -->
+  <section class="slide cta">
+    <div class="big-emoji" style="font-size:5rem;margin-bottom:8px">📰</div>
+    <h2>Silicon shaped around one workload</h2>
+    <p>Meta's in-house accelerator — a grid of Processing Elements, co-designed with PyTorch — built for efficient recommendation inference at massive scale.</p>
+    <div class="sfoot"><span><b>MTIA</b> · Meta Training and Inference Accelerator</span><span class="pageno">10 / 10</span></div>
+  </section>
+
+</body>
+</html>
