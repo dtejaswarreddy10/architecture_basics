@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GPU — LinkedIn Carousel</title>
+<style>
+  :root{
+    --accent:#76B900;
+    --accent-dark:#4f7d00;
+    --accent-soft:#eef7dc;
+    --ink:#0f1b27;
+    --muted:#5a6b7b;
+    --line:#cfe0f1;
+    --good:#0d9488;
+    --bad:#e0566f;
+    --slideW:1080px;
+    --slideH:1350px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:#33414f}
+  body{font-family:"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;
+       color:var(--ink);line-height:1.5;padding:24px;display:flex;flex-direction:column;
+       align-items:center;gap:24px}
+
+  /* on-screen helper bar (hidden when printing) */
+  .toolbar{position:sticky;top:0;z-index:50;background:#0f1b27;color:#fff;
+    width:var(--slideW);max-width:100%;border-radius:14px;padding:14px 20px;
+    display:flex;align-items:center;gap:14px;font-size:.9rem;box-shadow:0 8px 24px rgba(0,0,0,.4)}
+  .toolbar b{color:#7ec2ff}
+  .toolbar .hint{opacity:.8}
+
+  /* ---- each slide = one PDF page ---- */
+  .slide{position:relative;width:var(--slideW);height:var(--slideH);
+    background:#fff;border-radius:26px;overflow:hidden;
+    box-shadow:0 18px 50px rgba(0,0,0,.45);
+    display:flex;flex-direction:column;padding:84px 78px 70px}
+  .slide::before{content:"";position:absolute;top:0;left:0;right:0;height:14px;
+    background:linear-gradient(90deg,var(--accent),var(--accent-dark))}
+
+  /* decorative soft circle */
+  .slide .blob{position:absolute;width:520px;height:520px;border-radius:50%;
+    right:-180px;top:-160px;background:radial-gradient(circle,var(--accent-soft),transparent 70%);
+    opacity:.9;pointer-events:none}
+
+  .kicker{color:var(--accent);font-weight:800;letter-spacing:4px;
+    text-transform:uppercase;font-size:1rem;margin-bottom:8px}
+  .slide h1{font-size:3.4rem;line-height:1.08;color:var(--accent-dark);margin-bottom:14px}
+  .slide h2{font-size:2.5rem;line-height:1.12;color:var(--accent-dark);
+    display:flex;align-items:center;gap:18px;margin-bottom:26px}
+  .slide h2 .n{flex:0 0 auto;width:64px;height:64px;border-radius:16px;
+    background:var(--accent);color:#fff;display:grid;place-items:center;
+    font-size:1.8rem;font-weight:800}
+  .slide h3{font-size:1.6rem;color:var(--accent-dark);margin:22px 0 8px}
+  .slide p{font-size:1.42rem;margin:8px 0;color:var(--ink)}
+  .slide p .mut{color:var(--muted)}
+  .slide ul{margin:6px 0 6px 4px;list-style:none}
+  .slide li{font-size:1.4rem;margin:12px 0;padding-left:38px;position:relative}
+  .slide li::before{content:"▸";position:absolute;left:6px;color:var(--accent);font-weight:800}
+
+  .lead{font-size:1.7rem;color:var(--muted);margin-top:6px;max-width:90%}
+
+  .callout{border-left:8px solid var(--accent);background:var(--accent-soft);
+    padding:24px 28px;border-radius:0 18px 18px 0;margin:26px 0;
+    font-size:1.55rem;font-weight:600;color:var(--accent-dark)}
+
+  /* pipeline */
+  .pipe{display:flex;flex-wrap:wrap;gap:18px 30px;margin:20px 0}
+  .stage{flex:1;min-width:160px;background:#fff;border:3px solid var(--accent);
+    border-radius:18px;padding:22px 14px;text-align:center;position:relative}
+  .stage .s{font-weight:800;color:var(--accent-dark);font-size:1.5rem;display:block;margin-bottom:6px}
+  .stage small{color:var(--muted);font-size:1.05rem}
+
+  .badges{display:flex;flex-wrap:wrap;gap:14px;margin:18px 0}
+  .badge{background:var(--accent-soft);color:var(--accent-dark);border:2px solid var(--line);
+    padding:14px 22px;border-radius:14px;font-size:1.35rem;font-weight:700}
+
+  .stats{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin:22px 0}
+  .stat{background:linear-gradient(160deg,#fff,var(--accent-soft));border:2px solid var(--line);
+    border-radius:20px;padding:28px 20px;text-align:center}
+  .stat .num{font-size:2.4rem;font-weight:800;color:var(--accent-dark)}
+  .stat .lbl{font-size:1.15rem;color:var(--muted);text-transform:uppercase;
+    letter-spacing:1px;margin-top:6px}
+
+  table{width:100%;border-collapse:collapse;margin:18px 0;font-size:1.4rem}
+  th,td{padding:18px 22px;text-align:left;border-bottom:2px solid var(--line)}
+  thead th{background:var(--accent);color:#fff;font-size:1.45rem}
+  tbody tr:nth-child(even){background:var(--accent-soft)}
+
+  .twocol{display:grid;grid-template-columns:1fr 1fr;gap:26px;margin:22px 0}
+  .panel{border:2px solid var(--line);border-radius:20px;padding:26px 28px;background:#fff}
+  .panel h4{font-size:1.6rem;margin-bottom:8px;color:var(--accent-dark)}
+  .panel.good{border-color:var(--good)} .panel.good h4{color:var(--good)}
+  .panel.bad{border-color:var(--bad)} .panel.bad h4{color:var(--bad)}
+
+  .essence{background:linear-gradient(160deg,var(--accent-soft),#fff);
+    border:2px solid var(--line);border-radius:22px;padding:34px 38px}
+  .essence h3{margin-top:0}
+
+  /* footer of every slide */
+  .sfoot{margin-top:auto;display:flex;justify-content:space-between;align-items:center;
+    padding-top:24px;border-top:2px solid var(--line);color:var(--muted);font-size:1.15rem}
+  .sfoot b{color:var(--accent-dark)}
+  .pageno{font-weight:800;color:var(--accent)}
+
+  /* cover slide */
+  .cover{background:radial-gradient(900px 600px at 80% -10%,rgba(255,255,255,.16),transparent 60%),
+                  linear-gradient(160deg,#0c1620,var(--accent-dark) 55%,var(--accent));color:#fff;justify-content:center}
+  .cover::before{background:linear-gradient(90deg,#fff,rgba(255,255,255,.45))}
+  .cover .kicker{color:rgba(255,255,255,.82)}
+  .cover h1{color:#fff;font-size:5.2rem}
+  .cover .lead{color:rgba(255,255,255,.9);font-size:1.95rem}
+  .cover .big-emoji{font-size:6rem;margin-bottom:10px}
+  .cover .sfoot{border-top-color:rgba(255,255,255,.25);color:rgba(255,255,255,.78)}
+  .cover .sfoot b{color:#fff}
+  .cover .pageno{color:rgba(255,255,255,.82)}
+
+  /* closing CTA slide */
+  .cta{background:linear-gradient(160deg,#0c1620,var(--accent-dark) 55%,var(--accent));color:#fff;justify-content:center;text-align:center}
+  .cta::before{background:linear-gradient(90deg,#fff,rgba(255,255,255,.45))}
+  .cta h2{color:#fff;justify-content:center}
+  .cta p{color:rgba(255,255,255,.9);font-size:1.7rem}
+  .cta .like{margin-top:30px;font-size:1.5rem;font-weight:700;color:#fff;
+    background:rgba(255,255,255,.14);border:2px solid rgba(255,255,255,.4);
+    border-radius:16px;padding:22px 28px;display:inline-block}
+  .cta .sfoot{border-top-color:rgba(255,255,255,.25);color:rgba(255,255,255,.78)}
+  .cta .sfoot b{color:#fff}
+  .cta .pageno{color:rgba(255,255,255,.82)}
+
+  /* ---- print: one slide per page, no shadows ---- */
+  @page{size:1080px 1350px;margin:0}
+  @media print{
+    html,body{background:#fff;padding:0;gap:0}
+    .toolbar{display:none !important}
+    .slide{border-radius:0;box-shadow:none;break-after:page;page-break-after:always;
+      margin:0;width:1080px;height:1350px}
+    .slide:last-child{break-after:auto;page-break-after:auto}
+  }
+</style>
+</head>
+<body>
+
+  <div class="toolbar no-print">
+    🖨️ <b>To export this LinkedIn carousel:</b>
+    <span class="hint">Press <b>Ctrl/Cmd&nbsp;+&nbsp;P</b> → Destination <b>Save as PDF</b> → Margins <b>None</b> → Background graphics <b>ON</b> → Save. Upload the PDF to LinkedIn as a <b>Document</b> post.</span>
+  </div>
+
+  <!-- 1 · COVER -->
+  <section class="slide cover">
+    <div class="big-emoji">⚡</div>
+    <div class="kicker">VLSI Architectures</div>
+    <h1>GPU</h1>
+    <p class="lead">A massively parallel processor that runs thousands of simple operations at once — born for graphics, now the backbone of AI.</p>
+    <div class="sfoot"><span><b>Swipe →</b> to learn how the GPU works</span><span class="pageno">1 / 10</span></div>
+  </section>
+
+  <!-- 2 · INTRO -->
+  <section class="slide">
+    <div class="blob"></div>
+    <h2><span class="n">1</span> What is a GPU?</h2>
+    <p>A <strong>GPU</strong> is a processor designed to do <strong>many simple calculations at the same time</strong>. If a CPU is one very smart person solving one problem, a GPU is <strong>thousands of workers</strong> each doing a tiny task together.</p>
+    <div class="callout">Trade <strong>complexity</strong> for <strong>massive parallelism</strong> — thousands of simpler cores optimized for <strong>throughput</strong>, not low latency.</div>
+    <h3>Born from graphics</h3>
+    <p>GPUs were <strong>not</strong> invented for AI — they came from <strong>computer graphics and gaming</strong>: drawing millions of pixels, applying lighting and textures, and rendering 3D scenes in real time. Early GPUs were called <em>graphics accelerators</em>.</p>
+    <div class="sfoot"><span><b>GPU</b> · Graphics Processing Unit</span><span class="pageno">2 / 10</span></div>
+  </section>
+
+  <!-- 3 · INSIDE -->
+  <section class="slide">
+    <div class="blob"></div>
+    <h2><span class="n">2</span> Inside a GPU: the factory</h2>
+    <p>A GPU is a huge <strong>factory</strong>. The CPU is one expert craftsman; the GPU is <strong>thousands of assembly-line workers</strong> — each doing the <strong>same task</strong>, on <strong>different data</strong>, <strong>at the same time</strong>.</p>
+    <h3>SMs &amp; CUDA cores — the workers</h3>
+    <p>A GPU is divided into <strong>Streaming Multiprocessors (SMs)</strong>, each packed with small <strong>CUDA cores</strong>. Typical NVIDIA H100:</p>
+    <div class="stats">
+      <div class="stat"><div class="num">~120</div><div class="lbl">SMs</div></div>
+      <div class="stat"><div class="num">~128</div><div class="lbl">cores / SM</div></div>
+      <div class="stat"><div class="num">15,000+</div><div class="lbl">CUDA cores</div></div>
+      <div class="stat"><div class="num">3+ TB/s</div><div class="lbl">HBM bandwidth</div></div>
+    </div>
+    <div class="sfoot"><span><b>GPU</b> · The workers inside</span><span class="pageno">3 / 10</span></div>
+  </section>
+
+  <!-- 4 · SIMT -->
+  <section class="slide">
+    <div class="blob"></div>
+    <h2><span class="n">3</span> SIMT &amp; memory</h2>
+    <p>Every thread runs the <strong>same instruction</strong> on a <strong>different</strong> piece of data — <strong>SIMT</strong> (Single Instruction, Multiple Threads).</p>
+    <div class="callout">Perfect for "<strong>multiply all 1M pixels by 0.8</strong>" — one instruction, many threads, all at once.</div>
+    <h3>Memory hierarchy</h3>
+    <div class="badges">
+      <span class="badge">Registers (fastest)</span>
+      <span class="badge">Shared memory (per SM)</span>
+      <span class="badge">L2 cache</span>
+      <span class="badge">Global VRAM (huge)</span>
+    </div>
+    <div class="sfoot"><span><b>GPU</b> · How it executes</span><span class="pageno">4 / 10</span></div>
+  </section>
+
+  <!-- 5 · GPU vs CPU -->
+  <section class="slide">
+    <div class="blob"></div>
+    <h2><span class="n">4</span> GPU vs CPU</h2>
+    <table>
+      <thead><tr><th>Feature</th><th>CPU</th><th>GPU</th></tr></thead>
+      <tbody>
+        <tr><td>Core count</td><td>8–64</td><td>10,000+</td></tr>
+        <tr><td>Clock speed</td><td>Very high</td><td>Moderate</td></tr>
+        <tr><td>Cache</td><td>Large</td><td>Smaller</td></tr>
+        <tr><td>Parallelism</td><td>Limited</td><td>Massive</td></tr>
+        <tr><td>Best at</td><td>Logic &amp; control</td><td>Math &amp; data</td></tr>
+      </tbody>
+    </table>
+    <div class="callout">CPUs handle <strong>decision-making</strong>. GPUs handle <strong>number-crunching</strong>.</div>
+    <div class="sfoot"><span><b>GPU</b> · The key contrast</span><span class="pageno">5 / 10</span></div>
+  </section>
+
+  <!-- 6 · APPLICATIONS -->
+  <section class="slide">
+    <div class="blob"></div>
+    <h2><span class="n">5</span> Applications</h2>
+    <p>Built for <strong>real-time rendering</strong> — millions of calculations per frame at 60–240 FPS. The same matrix-math muscle now powers <strong>AI training</strong> with <strong>Tensor Cores</strong> and mixed precision (FP16/BF16/FP8) — <strong>10×–100×</strong> faster than a CPU.</p>
+    <div class="badges">
+      <span class="badge">🎮 Gaming &amp; rendering</span>
+      <span class="badge">🧠 Deep learning</span>
+      <span class="badge">🔬 Scientific simulation</span>
+      <span class="badge">🎬 Video encoding</span>
+      <span class="badge">🔐 Cryptography</span>
+      <span class="badge">🩻 Medical imaging</span>
+    </div>
+    <div class="twocol">
+      <div class="panel good"><h4>✅ Great at</h4>
+        <ul><li>Highly parallel work</li><li>Matrix &amp; vector math</li><li>Large datasets</li><li>Throughput workloads</li></ul></div>
+      <div class="panel bad"><h4>⛔ Not good at</h4>
+        <ul><li>Branch-heavy logic</li><li>Small, sequential tasks</li><li>OS-level scheduling</li><li>Complex decision trees</li></ul></div>
+    </div>
+    <div class="sfoot"><span><b>GPU</b> · Where it shines</span><span class="pageno">6 / 10</span></div>
+  </section>
+
+  <!-- 7 · MARKET -->
+  <section class="slide">
+    <div class="blob"></div>
+    <h2><span class="n">6</span> Market players</h2>
+    <table>
+      <thead><tr><th>Vendor</th><th>Examples</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td>NVIDIA</td><td>H100 / H200, NVLink</td><td>CUDA + cuDNN · ~80% AI market</td></tr>
+        <tr><td>AMD</td><td>MI300X, ROCm</td><td>192 GB HBM, open stack</td></tr>
+        <tr><td>Intel</td><td>Ponte Vecchio, Gaudi</td><td>Price / performance focus</td></tr>
+      </tbody>
+    </table>
+    <div class="stats">
+      <div class="stat"><div class="num">~80%</div><div class="lbl">NVIDIA · AI accelerator market</div></div>
+      <div class="stat"><div class="num">192 GB</div><div class="lbl">AMD MI300X · HBM memory</div></div>
+    </div>
+    <div class="sfoot"><span><b>GPU</b> · Who builds them</span><span class="pageno">7 / 10</span></div>
+  </section>
+
+  <!-- 8 · GAMING vs AI -->
+  <section class="slide">
+    <div class="blob"></div>
+    <h2><span class="n">7</span> Gaming GPU vs AI GPU</h2>
+    <table>
+      <thead><tr><th>Feature</th><th>Gaming GPU</th><th>AI GPU</th></tr></thead>
+      <tbody>
+        <tr><td>VRAM</td><td>8–24 GB</td><td>80–192 GB</td></tr>
+        <tr><td>Precision</td><td>FP32 focus</td><td>FP16 / BF16 / FP8</td></tr>
+        <tr><td>Interconnect</td><td>PCIe</td><td>NVLink</td></tr>
+        <tr><td>Reliability</td><td>Consumer</td><td>Data-center grade</td></tr>
+        <tr><td>Cost</td><td>Affordable</td><td>Extremely expensive</td></tr>
+      </tbody>
+    </table>
+    <div class="callout"><strong>Trend:</strong> with architectures like <strong>Blackwell</strong>, GPUs are becoming <strong>AI-first</strong>, not graphics-first.</div>
+    <div class="sfoot"><span><b>GPU</b> · Two kinds of GPU</span><span class="pageno">8 / 10</span></div>
+  </section>
+
+  <!-- 9 · SUMMARY -->
+  <section class="slide">
+    <div class="blob"></div>
+    <h2><span class="n">8</span> GPU in one paragraph</h2>
+    <div class="essence">
+      <p>A GPU is a massively parallel processor that executes <strong>thousands of simple operations simultaneously</strong>. Built for graphics, it now powers AI because neural networks rely on matrix math, which GPUs run extremely efficiently. It sacrifices complex control logic for raw <strong>throughput</strong> — unmatched for data-parallel work.</p>
+    </div>
+    <div class="twocol" style="margin-top:24px">
+      <div class="panel good"><h4>Choose a GPU when…</h4>
+        <ul><li>Your workload is highly parallel</li><li>You process large datasets</li><li>You need fast matrix ops</li><li>You're doing AI / ML / HPC</li></ul></div>
+      <div class="panel"><h4>Future trends</h4>
+        <ul><li>AI &gt; graphics specialization</li><li>Lower precision (FP8, INT8)</li><li>Tighter CPU–GPU integration</li><li>Larger shared memory pools</li></ul></div>
+    </div>
+    <div class="sfoot"><span><b>GPU</b> · The takeaway</span><span class="pageno">9 / 10</span></div>
+  </section>
+
+  <!-- 10 · CLOSING -->
+  <section class="slide cta">
+    <div class="big-emoji" style="font-size:5rem;margin-bottom:8px">⚡</div>
+    <h2>Massively parallel by design</h2>
+    <p>Thousands of simple cores built for throughput — born for graphics, now the backbone of modern AI.</p>
+    <div class="sfoot"><span><b>GPU</b> · Graphics Processing Unit</span><span class="pageno">10 / 10</span></div>
+  </section>
+
+</body>
+</html>
