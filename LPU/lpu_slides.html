@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LPU — LinkedIn Carousel</title>
+<style>
+  :root{
+    --accent:#0891B2;        /* Groq cyan */
+    --accent-dark:#0e6f88;
+    --accent-soft:#d8f3f9;
+    --ink:#0f1b27;
+    --muted:#5a6b7b;
+    --line:#cfe0f1;
+    --good:#0d9488;
+    --bad:#e0566f;
+    --slideW:1080px;
+    --slideH:1350px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:#33414f}
+  body{font-family:"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;
+       color:var(--ink);line-height:1.5;padding:24px;display:flex;flex-direction:column;
+       align-items:center;gap:24px}
+
+  /* on-screen helper bar (hidden when printing) */
+  .toolbar{position:sticky;top:0;z-index:50;background:#0f1b27;color:#fff;
+    width:var(--slideW);max-width:100%;border-radius:14px;padding:14px 20px;
+    display:flex;align-items:center;gap:14px;font-size:.9rem;box-shadow:0 8px 24px rgba(0,0,0,.4)}
+  .toolbar b{color:#7ec2ff}
+  .toolbar .hint{opacity:.8}
+
+  /* ---- each slide = one PDF page ---- */
+  .slide{position:relative;width:var(--slideW);height:var(--slideH);
+    background:#fff;border-radius:26px;overflow:hidden;
+    box-shadow:0 18px 50px rgba(0,0,0,.45);
+    display:flex;flex-direction:column;padding:84px 78px 70px}
+  .slide::before{content:"";position:absolute;top:0;left:0;right:0;height:14px;
+    background:linear-gradient(90deg,var(--accent),var(--accent-dark))}
+
+  /* decorative soft circle */
+  .slide .blob{position:absolute;width:520px;height:520px;border-radius:50%;
+    right:-180px;top:-160px;background:radial-gradient(circle,var(--accent-soft),transparent 70%);
+    opacity:.9;pointer-events:none}
+
+  .kicker{color:var(--accent);font-weight:800;letter-spacing:4px;
+    text-transform:uppercase;font-size:1rem;margin-bottom:8px}
+  .slide h1{font-size:3.4rem;line-height:1.08;color:var(--accent-dark);margin-bottom:14px}
+  .slide h2{font-size:2.5rem;line-height:1.12;color:var(--accent-dark);
+    display:flex;align-items:center;gap:18px;margin-bottom:26px}
+  .slide h2 .n{flex:0 0 auto;width:64px;height:64px;border-radius:16px;
+    background:var(--accent);color:#fff;display:grid;place-items:center;
+    font-size:1.8rem;font-weight:800}
+  .slide h3{font-size:1.6rem;color:var(--accent-dark);margin:22px 0 8px}
+  .slide p{font-size:1.42rem;margin:8px 0;color:var(--ink)}
+  .slide p .mut{color:var(--muted)}
+  .slide ul{margin:6px 0 6px 4px;list-style:none}
+  .slide li{font-size:1.4rem;margin:12px 0;padding-left:38px;position:relative}
+  .slide li::before{content:"▸";position:absolute;left:6px;color:var(--accent);font-weight:800}
+
+  .lead{font-size:1.7rem;color:var(--muted);margin-top:6px;max-width:90%}
+
+  .callout{border-left:8px solid var(--accent);background:var(--accent-soft);
+    padding:24px 28px;border-radius:0 18px 18px 0;margin:26px 0;
+    font-size:1.55rem;font-weight:600;color:var(--accent-dark)}
+
+  /* pipeline */
+  .pipe{display:flex;flex-wrap:wrap;gap:18px 30px;margin:20px 0}
+  .stage{flex:1;min-width:160px;background:#fff;border:3px solid var(--accent);
+    border-radius:18px;padding:22px 14px;text-align:center;position:relative}
+  .stage .s{font-weight:800;color:var(--accent-dark);font-size:1.5rem;display:block;margin-bottom:6px}
+  .stage small{color:var(--muted);font-size:1.05rem}
+
+  .badges{display:flex;flex-wrap:wrap;gap:14px;margin:18px 0}
+  .badge{background:var(--accent-soft);color:var(--accent-dark);border:2px solid var(--line);
+    padding:14px 22px;border-radius:14px;font-size:1.35rem;font-weight:700}
+
+  .stats{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin:22px 0}
+  .stat{background:linear-gradient(160deg,#fff,var(--accent-soft));border:2px solid var(--line);
+    border-radius:20px;padding:28px 20px;text-align:center}
+  .stat .num{font-size:2.4rem;font-weight:800;color:var(--accent-dark)}
+  .stat .lbl{font-size:1.15rem;color:var(--muted);text-transform:uppercase;
+    letter-spacing:1px;margin-top:6px}
+
+  table{width:100%;border-collapse:collapse;margin:18px 0;font-size:1.4rem}
+  th,td{padding:18px 22px;text-align:left;border-bottom:2px solid var(--line)}
+  thead th{background:var(--accent);color:#fff;font-size:1.45rem}
+  tbody tr:nth-child(even){background:var(--accent-soft)}
+
+  .twocol{display:grid;grid-template-columns:1fr 1fr;gap:26px;margin:22px 0}
+  .panel{border:2px solid var(--line);border-radius:20px;padding:26px 28px;background:#fff}
+  .panel h4{font-size:1.6rem;margin-bottom:8px;color:var(--accent-dark)}
+  .panel.good{border-color:var(--good)} .panel.good h4{color:var(--good)}
+  .panel.bad{border-color:var(--bad)} .panel.bad h4{color:var(--bad)}
+
+  .essence{background:linear-gradient(160deg,var(--accent-soft),#fff);
+    border:2px solid var(--line);border-radius:22px;padding:34px 38px}
+  .essence h3{margin-top:0}
+
+  /* footer of every slide */
+  .sfoot{margin-top:auto;display:flex;justify-content:space-between;align-items:center;
+    padding-top:24px;border-top:2px solid var(--line);color:var(--muted);font-size:1.15rem}
+  .sfoot b{color:var(--accent-dark)}
+  .pageno{font-weight:800;color:var(--accent)}
+
+  /* cover slide */
+  .cover{background:radial-gradient(900px 600px at 80% -10%,rgba(255,255,255,.16),transparent 60%),
+                  linear-gradient(160deg,#0c1620,var(--accent-dark) 55%,var(--accent));color:#fff;justify-content:center}
+  .cover::before{background:linear-gradient(90deg,#fff,rgba(255,255,255,.45))}
+  .cover .kicker{color:rgba(255,255,255,.82)}
+  .cover h1{color:#fff;font-size:5.2rem}
+  .cover .lead{color:rgba(255,255,255,.9);font-size:1.95rem}
+  .cover .big-emoji{font-size:6rem;margin-bottom:10px}
+  .cover .sfoot{border-top-color:rgba(255,255,255,.25);color:rgba(255,255,255,.78)}
+  .cover .sfoot b{color:#fff}
+  .cover .pageno{color:rgba(255,255,255,.82)}
+
+  /* closing CTA slide */
+  .cta{background:linear-gradient(160deg,#0c1620,var(--accent-dark) 55%,var(--accent));color:#fff;justify-content:center;text-align:center}
+  .cta::before{background:linear-gradient(90deg,#fff,rgba(255,255,255,.45))}
+  .cta h2{color:#fff;justify-content:center}
+  .cta p{color:rgba(255,255,255,.9);font-size:1.7rem}
+  .cta .like{margin-top:30px;font-size:1.5rem;font-weight:700;color:#fff;
+    background:rgba(255,255,255,.14);border:2px solid rgba(255,255,255,.4);
+    border-radius:16px;padding:22px 28px;display:inline-block}
+  .cta .sfoot{border-top-color:rgba(255,255,255,.25);color:rgba(255,255,255,.78)}
+  .cta .sfoot b{color:#fff}
+  .cta .pageno{color:rgba(255,255,255,.82)}
+
+  /* ---- print: one slide per page, no shadows ---- */
+  @page{size:1080px 1350px;margin:0}
+  @media print{
+    html,body{background:#fff;padding:0;gap:0}
+    .toolbar{display:none !important}
+    .slide{border-radius:0;box-shadow:none;break-after:page;page-break-after:always;
+      margin:0;width:1080px;height:1350px}
+    .slide:last-child{break-after:auto;page-break-after:auto}
+  }
+</style>
+</head>
+<body>
+
+  <div class="toolbar no-print">
+    🖨️ <b>To export this LinkedIn carousel:</b>
+    <span class="hint">Press <b>Ctrl/Cmd&nbsp;+&nbsp;P</b> → Destination <b>Save as PDF</b> → Margins <b>None</b> → Background graphics <b>ON</b> → Save. Upload the PDF to LinkedIn as a <b>Document</b> post.</span>
+  </div>
+
+  <!-- 1 · COVER -->
+  <section class="slide cover">
+    <div class="big-emoji">⚡</div>
+    <div class="kicker">VLSI Architectures</div>
+    <h1>LPU</h1>
+    <p class="lead">A chip built for blazing-fast, predictable AI inference — the compiler schedules every operation in advance, so there's no guesswork and no waiting.</p>
+    <div class="sfoot"><span><b>Swipe →</b> to learn how the LPU works</span><span class="pageno">1 / 10</span></div>
+  </section>
+
+  <!-- 2 · INTRO -->
+  <section class="slide">
+    <div class="blob"></div>
+    <h2><span class="n">1</span> What is an LPU?</h2>
+    <p>An <strong>LPU (Language Processing Unit)</strong> from <strong>Groq</strong> runs large language models with <strong>extremely low, predictable latency</strong> — generating tokens at record speed. Its architecture is the <strong>TSP (Tensor Streaming Processor)</strong>.</p>
+    <div class="callout">A GPU decides <strong>at runtime</strong> what each core does; an LPU decides <strong>at compile time</strong> — everything is pre-planned.</div>
+    <h3>The main idea</h3>
+    <p>Make the hardware perfectly predictable by letting <strong>software schedule everything</strong> — no caches, no branch prediction, no dynamic scheduling. The compiler maps exactly which op runs on which unit at which <em>cycle</em>.</p>
+    <div class="sfoot"><span><b>LPU</b> · Language Processing Unit</span><span class="pageno">2 / 10</span></div>
+  </section>
+
+  <!-- 3 · ORIGINS -->
+  <section class="slide">
+    <div class="blob"></div>
+    <h2><span class="n">2</span> Where LPUs came from</h2>
+    <p>Groq targeted the biggest pain in serving LLMs: <strong>inconsistent latency</strong>.</p>
+    <div class="stats">
+      <div class="stat"><div class="num">2016</div><div class="lbl">Groq founded</div></div>
+      <div class="stat"><div class="num">Jonathan Ross</div><div class="lbl">founder · ex-Google TPU</div></div>
+    </div>
+    <p class="mut">GPUs are fast on average but <strong>jittery</strong> — caches and schedulers make timing variable. Groq's answer: <strong>remove all nondeterminism</strong>.</p>
+    <h3>Analogy: a choreographed dance</h3>
+    <p>A GPU is a busy kitchen where chefs improvise and sometimes collide. The LPU is a <strong>perfectly choreographed dance</strong> — every move planned in advance, so it runs at full speed with <em>no collisions and no waiting</em>.</p>
+    <div class="sfoot"><span><b>LPU</b> · Origins &amp; idea</span><span class="pageno">3 / 10</span></div>
+  </section>
+
+  <!-- 4 · STREAMING -->
+  <section class="slide">
+    <div class="blob"></div>
+    <h2><span class="n">3</span> Compiler-scheduled streaming</h2>
+    <p>The compiler lays out every unit's work, <strong>cycle by cycle</strong> — the hardware just executes the plan across its streaming lanes:</p>
+    <div class="pipe">
+      <div class="stage"><span class="s">Matrix</span><small>MM · matrix multiply</small></div>
+      <div class="stage"><span class="s">Vector</span><small>add · activation</small></div>
+      <div class="stage"><span class="s">Memory</span><small>load / store SRAM</small></div>
+    </div>
+    <div class="callout">Every cycle is planned in advance — full speed, <strong>no collisions and no waiting</strong>.</div>
+    <div class="sfoot"><span><b>LPU</b> · Tensor Streaming Processor</span><span class="pageno">4 / 10</span></div>
+  </section>
+
+  <!-- 5 · WHAT GROQ REMOVED -->
+  <section class="slide">
+    <div class="blob"></div>
+    <h2><span class="n">4</span> What Groq removed</h2>
+    <table>
+      <thead><tr><th>Typical CPU/GPU feature</th><th>LPU</th></tr></thead>
+      <tbody>
+        <tr><td>Caches</td><td>❌ removed — direct on-chip SRAM</td></tr>
+        <tr><td>Branch prediction</td><td>❌ removed</td></tr>
+        <tr><td>Out-of-order scheduling</td><td>❌ removed</td></tr>
+        <tr><td><strong>Result</strong></td><td>✅ <strong>Fully deterministic timing</strong></td></tr>
+      </tbody>
+    </table>
+    <div class="callout"><strong>Deterministic = fast and scalable:</strong> exact timing lets Groq chain many chips and still predict behavior perfectly — a big reason for its high tokens-per-second.</div>
+    <div class="sfoot"><span><b>LPU</b> · Removed on purpose</span><span class="pageno">5 / 10</span></div>
+  </section>
+
+  <!-- 6 · LPU vs GPU -->
+  <section class="slide">
+    <div class="blob"></div>
+    <h2><span class="n">5</span> LPU vs GPU</h2>
+    <table>
+      <thead><tr><th>Feature</th><th>GPU</th><th>LPU</th></tr></thead>
+      <tbody>
+        <tr><td>Scheduling</td><td>Dynamic (runtime)</td><td>Static (compiler)</td></tr>
+        <tr><td>Latency</td><td>Fast but variable</td><td>Low &amp; deterministic</td></tr>
+        <tr><td>Caches</td><td>Yes</td><td>None — direct SRAM</td></tr>
+        <tr><td>Best at</td><td>Training + inference</td><td>Fast LLM inference</td></tr>
+      </tbody>
+    </table>
+    <div class="callout">A GPU decides <strong>at runtime</strong>; an LPU decides <strong>at compile time</strong>.</div>
+    <div class="sfoot"><span><b>LPU</b> · The key contrast</span><span class="pageno">6 / 10</span></div>
+  </section>
+
+  <!-- 7 · APPLICATIONS -->
+  <section class="slide">
+    <div class="blob"></div>
+    <h2><span class="n">6</span> Applications</h2>
+    <div class="badges">
+      <span class="badge">💬 Real-time LLM inference</span>
+      <span class="badge">⚡ Low-latency token generation</span>
+      <span class="badge">🔌 AI APIs (GroqCloud)</span>
+      <span class="badge">🏢 Latency-critical enterprise AI</span>
+    </div>
+    <div class="twocol">
+      <div class="panel good"><h4>✅ Why pick an LPU</h4>
+        <ul><li>Lowest, most predictable latency</li><li>Record token-generation speed</li><li>Deterministic → easy SLAs</li><li>Efficient multi-chip scaling</li></ul></div>
+      <div class="panel bad"><h4>⛔ Not for</h4>
+        <ul><li>Large-scale training → GPU/TPU/WSE</li><li>General computing → CPU</li><li>Graphics → GPU</li><li>Non-inference workloads</li></ul></div>
+    </div>
+    <div class="sfoot"><span><b>LPU</b> · Where it shines</span><span class="pageno">7 / 10</span></div>
+  </section>
+
+  <!-- 8 · MARKET -->
+  <section class="slide">
+    <div class="blob"></div>
+    <h2><span class="n">7</span> Market &amp; future</h2>
+    <table>
+      <thead><tr><th>Item</th><th>Note</th></tr></thead>
+      <tbody>
+        <tr><td>GroqChip (TSP)</td><td>The LPU silicon — deterministic streaming processor</td></tr>
+        <tr><td>GroqCard / GroqNode</td><td>Cards &amp; systems for the data center</td></tr>
+        <tr><td>GroqCloud</td><td>Cloud API delivering very fast LLM inference</td></tr>
+        <tr><td>Groq Compiler</td><td>Does the heavy lifting — schedules everything</td></tr>
+      </tbody>
+    </table>
+    <div class="callout">Groq made headlines generating <strong>hundreds of tokens per second</strong> — positioning the LPU as the chip for the <strong>inference era</strong> of AI.</div>
+    <div class="sfoot"><span><b>LPU</b> · Who builds them</span><span class="pageno">8 / 10</span></div>
+  </section>
+
+  <!-- 9 · SUMMARY -->
+  <section class="slide">
+    <div class="blob"></div>
+    <h2><span class="n">8</span> LPU in one paragraph</h2>
+    <div class="essence">
+      <p>The LPU is Groq's AI inference processor, built on a <strong>Tensor Streaming Processor</strong> that removes caches, branch prediction, and dynamic scheduling so the <strong>compiler can plan every operation cycle-by-cycle</strong>. This makes timing fully <strong>deterministic</strong>, delivering the lowest, most predictable latency and record token-generation speeds for LLMs — specialized for inference, not training.</p>
+    </div>
+    <div class="twocol" style="margin-top:24px">
+      <div class="panel good"><h4>Choose an LPU when…</h4>
+        <ul><li>You serve LLMs needing fast replies</li><li>Latency is critical</li><li>You want deterministic performance</li><li>You're in the inference phase</li></ul></div>
+      <div class="panel"><h4>Future trends</h4>
+        <ul><li>The "inference era" suits the LPU</li><li>Ever-higher tokens-per-second</li><li>Deterministic large-scale systems</li><li>Fast, cheap cloud inference</li></ul></div>
+    </div>
+    <div class="sfoot"><span><b>LPU</b> · The takeaway</span><span class="pageno">9 / 10</span></div>
+  </section>
+
+  <!-- 10 · CLOSING -->
+  <section class="slide cta">
+    <div class="big-emoji" style="font-size:5rem;margin-bottom:8px">⚡</div>
+    <h2>Predictable AI inference</h2>
+    <p>Groq's LPU pre-plans every operation at compile time — removing caches and schedulers to deliver the lowest, most predictable latency and record token speeds for LLMs.</p>
+    <div class="sfoot"><span><b>LPU</b> · Language Processing Unit</span><span class="pageno">10 / 10</span></div>
+  </section>
+
+</body>
+</html>
