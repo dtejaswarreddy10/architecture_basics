@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RDU — LinkedIn Carousel</title>
+<style>
+  :root{
+    --accent:#C026D3;        /* fuchsia */
+    --accent-dark:#a21caf;
+    --accent-soft:#fbe2fe;
+    --ink:#0f1b27;
+    --muted:#5a6b7b;
+    --line:#cfe0f1;
+    --good:#0d9488;
+    --bad:#e0566f;
+    --slideW:1080px;
+    --slideH:1350px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:#33414f}
+  body{font-family:"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;
+       color:var(--ink);line-height:1.5;padding:24px;display:flex;flex-direction:column;
+       align-items:center;gap:24px}
+
+  /* on-screen helper bar (hidden when printing) */
+  .toolbar{position:sticky;top:0;z-index:50;background:#0f1b27;color:#fff;
+    width:var(--slideW);max-width:100%;border-radius:14px;padding:14px 20px;
+    display:flex;align-items:center;gap:14px;font-size:.9rem;box-shadow:0 8px 24px rgba(0,0,0,.4)}
+  .toolbar b{color:#7ec2ff}
+  .toolbar .hint{opacity:.8}
+
+  /* ---- each slide = one PDF page ---- */
+  .slide{position:relative;width:var(--slideW);height:var(--slideH);
+    background:#fff;border-radius:26px;overflow:hidden;
+    box-shadow:0 18px 50px rgba(0,0,0,.45);
+    display:flex;flex-direction:column;padding:84px 78px 70px}
+  .slide::before{content:"";position:absolute;top:0;left:0;right:0;height:14px;
+    background:linear-gradient(90deg,var(--accent),var(--accent-dark))}
+
+  /* decorative soft circle */
+  .slide .blob{position:absolute;width:520px;height:520px;border-radius:50%;
+    right:-180px;top:-160px;background:radial-gradient(circle,var(--accent-soft),transparent 70%);
+    opacity:.9;pointer-events:none}
+
+  .kicker{color:var(--accent);font-weight:800;letter-spacing:4px;
+    text-transform:uppercase;font-size:1rem;margin-bottom:8px}
+  .slide h1{font-size:3.4rem;line-height:1.08;color:var(--accent-dark);margin-bottom:14px}
+  .slide h2{font-size:2.5rem;line-height:1.12;color:var(--accent-dark);
+    display:flex;align-items:center;gap:18px;margin-bottom:26px}
+  .slide h2 .n{flex:0 0 auto;width:64px;height:64px;border-radius:16px;
+    background:var(--accent);color:#fff;display:grid;place-items:center;
+    font-size:1.8rem;font-weight:800}
+  .slide h3{font-size:1.6rem;color:var(--accent-dark);margin:22px 0 8px}
+  .slide p{font-size:1.42rem;margin:8px 0;color:var(--ink)}
+  .slide p .mut{color:var(--muted)}
+  .slide ul{margin:6px 0 6px 4px;list-style:none}
+  .slide li{font-size:1.4rem;margin:12px 0;padding-left:38px;position:relative}
+  .slide li::before{content:"▸";position:absolute;left:6px;color:var(--accent);font-weight:800}
+
+  .lead{font-size:1.7rem;color:var(--muted);margin-top:6px;max-width:90%}
+
+  .callout{border-left:8px solid var(--accent);background:var(--accent-soft);
+    padding:24px 28px;border-radius:0 18px 18px 0;margin:26px 0;
+    font-size:1.55rem;font-weight:600;color:var(--accent-dark)}
+
+  /* pipeline */
+  .pipe{display:flex;flex-wrap:wrap;gap:18px 30px;margin:20px 0}
+  .stage{flex:1;min-width:160px;background:#fff;border:3px solid var(--accent);
+    border-radius:18px;padding:22px 14px;text-align:center;position:relative}
+  .stage .s{font-weight:800;color:var(--accent-dark);font-size:1.5rem;display:block;margin-bottom:6px}
+  .stage small{color:var(--muted);font-size:1.05rem}
+
+  .badges{display:flex;flex-wrap:wrap;gap:14px;margin:18px 0}
+  .badge{background:var(--accent-soft);color:var(--accent-dark);border:2px solid var(--line);
+    padding:14px 22px;border-radius:14px;font-size:1.35rem;font-weight:700}
+
+  .stats{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin:22px 0}
+  .stat{background:linear-gradient(160deg,#fff,var(--accent-soft));border:2px solid var(--line);
+    border-radius:20px;padding:28px 20px;text-align:center}
+  .stat .num{font-size:2.4rem;font-weight:800;color:var(--accent-dark)}
+  .stat .lbl{font-size:1.15rem;color:var(--muted);text-transform:uppercase;
+    letter-spacing:1px;margin-top:6px}
+
+  table{width:100%;border-collapse:collapse;margin:18px 0;font-size:1.4rem}
+  th,td{padding:18px 22px;text-align:left;border-bottom:2px solid var(--line)}
+  thead th{background:var(--accent);color:#fff;font-size:1.45rem}
+  tbody tr:nth-child(even){background:var(--accent-soft)}
+
+  .twocol{display:grid;grid-template-columns:1fr 1fr;gap:26px;margin:22px 0}
+  .panel{border:2px solid var(--line);border-radius:20px;padding:26px 28px;background:#fff}
+  .panel h4{font-size:1.6rem;margin-bottom:8px;color:var(--accent-dark)}
+  .panel.good{border-color:var(--good)} .panel.good h4{color:var(--good)}
+  .panel.bad{border-color:var(--bad)} .panel.bad h4{color:var(--bad)}
+
+  .essence{background:linear-gradient(160deg,var(--accent-soft),#fff);
+    border:2px solid var(--line);border-radius:22px;padding:34px 38px}
+  .essence h3{margin-top:0}
+
+  /* footer of every slide */
+  .sfoot{margin-top:auto;display:flex;justify-content:space-between;align-items:center;
+    padding-top:24px;border-top:2px solid var(--line);color:var(--muted);font-size:1.15rem}
+  .sfoot b{color:var(--accent-dark)}
+  .pageno{font-weight:800;color:var(--accent)}
+
+  /* cover slide */
+  .cover{background:radial-gradient(900px 600px at 80% -10%,rgba(255,255,255,.16),transparent 60%),
+                  linear-gradient(160deg,#0c1620,var(--accent-dark) 55%,var(--accent));color:#fff;justify-content:center}
+  .cover::before{background:linear-gradient(90deg,#fff,rgba(255,255,255,.45))}
+  .cover .kicker{color:rgba(255,255,255,.82)}
+  .cover h1{color:#fff;font-size:5.2rem}
+  .cover .lead{color:rgba(255,255,255,.9);font-size:1.95rem}
+  .cover .big-emoji{font-size:6rem;margin-bottom:10px}
+  .cover .sfoot{border-top-color:rgba(255,255,255,.25);color:rgba(255,255,255,.78)}
+  .cover .sfoot b{color:#fff}
+  .cover .pageno{color:rgba(255,255,255,.82)}
+
+  /* closing CTA slide */
+  .cta{background:linear-gradient(160deg,#0c1620,var(--accent-dark) 55%,var(--accent));color:#fff;justify-content:center;text-align:center}
+  .cta::before{background:linear-gradient(90deg,#fff,rgba(255,255,255,.45))}
+  .cta h2{color:#fff;justify-content:center}
+  .cta p{color:rgba(255,255,255,.9);font-size:1.7rem}
+  .cta .like{margin-top:30px;font-size:1.5rem;font-weight:700;color:#fff;
+    background:rgba(255,255,255,.14);border:2px solid rgba(255,255,255,.4);
+    border-radius:16px;padding:22px 28px;display:inline-block}
+  .cta .sfoot{border-top-color:rgba(255,255,255,.25);color:rgba(255,255,255,.78)}
+  .cta .sfoot b{color:#fff}
+  .cta .pageno{color:rgba(255,255,255,.82)}
+
+  /* ---- print: one slide per page, no shadows ---- */
+  @page{size:1080px 1350px;margin:0}
+  @media print{
+    html,body{background:#fff;padding:0;gap:0}
+    .toolbar{display:none !important}
+    .slide{border-radius:0;box-shadow:none;break-after:page;page-break-after:always;
+      margin:0;width:1080px;height:1350px}
+    .slide:last-child{break-after:auto;page-break-after:auto}
+  }
+</style>
+</head>
+<body>
+
+  <div class="toolbar no-print">
+    🖨️ <b>To export this LinkedIn carousel:</b>
+    <span class="hint">Press <b>Ctrl/Cmd&nbsp;+&nbsp;P</b> → Destination <b>Save as PDF</b> → Margins <b>None</b> → Background graphics <b>ON</b> → Save. Upload the PDF to LinkedIn as a <b>Document</b> post.</span>
+  </div>
+
+  <!-- 1 · COVER -->
+  <section class="slide cover">
+    <div class="big-emoji">🔀</div>
+    <div class="kicker">VLSI Architectures</div>
+    <h1>RDU</h1>
+    <p class="lead">A chip that reshapes itself to match your AI model — instead of forcing the model through fixed cores, it configures its hardware into the exact dataflow the model needs.</p>
+    <div class="sfoot"><span><b>Swipe →</b> to learn how the RDU works</span><span class="pageno">1 / 10</span></div>
+  </section>
+
+  <!-- 2 · INTRO -->
+  <section class="slide">
+    <div class="blob"></div>
+    <h2><span class="n">1</span> What is an RDU?</h2>
+    <p>An <strong>RDU (Reconfigurable Dataflow Unit)</strong> from <strong>SambaNova Systems</strong> is built on a <strong>Reconfigurable Dataflow Architecture (RDA)</strong>. Instead of running instructions on fixed cores like a CPU/GPU, the RDU <strong>rewires its compute and memory units</strong> to form a custom pipeline that mirrors the model's <strong>dataflow graph</strong>.</p>
+    <div class="callout">Configure the hardware to the model, <strong>not the model to the hardware</strong>.</div>
+    <h3>The main idea</h3>
+    <p>A compiler arranges the RDU's units into the <strong>precise pipeline a model needs</strong>, so intermediate results <em>stream between stages on-chip</em> instead of bouncing to memory.</p>
+    <div class="sfoot"><span><b>RDU</b> · Reconfigurable Dataflow Unit</span><span class="pageno">2 / 10</span></div>
+  </section>
+
+  <!-- 3 · ORIGINS -->
+  <section class="slide">
+    <div class="blob"></div>
+    <h2><span class="n">2</span> Where RDUs came from</h2>
+    <p>SambaNova was <strong>founded in 2017</strong> by Stanford professors and veteran chip leaders.</p>
+    <div class="stats">
+      <div class="stat"><div class="num">2017</div><div class="lbl">SambaNova founded</div></div>
+      <div class="stat"><div class="num">RDA</div><div class="lbl">Reconfigurable Dataflow Architecture</div></div>
+    </div>
+    <p class="mut">They saw that AI models <em>are</em> dataflow graphs, yet GPUs execute them as endless kernel launches with constant memory traffic.</p>
+    <h3>Analogy: a custom factory line</h3>
+    <p>A GPU is a general workshop where every part is carried back and forth to the same machines. The RDU <strong>builds a dedicated assembly line</strong> shaped like your model — each station feeds the next, so the product flows straight through.</p>
+    <div class="sfoot"><span><b>RDU</b> · Origins &amp; idea</span><span class="pageno">3 / 10</span></div>
+  </section>
+
+  <!-- 4 · SPATIAL DATAFLOW -->
+  <section class="slide">
+    <div class="blob"></div>
+    <h2><span class="n">3</span> Spatial dataflow</h2>
+    <p>The RDU <strong>maps the whole graph onto hardware</strong> and keeps data moving — results stream straight through a pipeline shaped like the model:</p>
+    <div class="pipe">
+      <div class="stage"><span class="s">IN</span><small>input data</small></div>
+      <div class="stage"><span class="s">PCU</span><small>compute</small></div>
+      <div class="stage"><span class="s">PMU</span><small>memory</small></div>
+    </div>
+    <div class="pipe">
+      <div class="stage"><span class="s">PCU</span><small>compute</small></div>
+      <div class="stage"><span class="s">OUT</span><small>result</small></div>
+    </div>
+    <h3>What makes the RDU work</h3>
+    <div class="badges">
+      <span class="badge">Switching fabric</span>
+      <span class="badge">On-chip streaming</span>
+      <span class="badge">No memory round-trips</span>
+      <span class="badge">Graph mapped to silicon</span>
+    </div>
+    <div class="sfoot"><span><b>RDU</b> · How data flows</span><span class="pageno">4 / 10</span></div>
+  </section>
+
+  <!-- 5 · BUILDING BLOCKS -->
+  <section class="slide">
+    <div class="blob"></div>
+    <h2><span class="n">4</span> Building blocks (RDA)</h2>
+    <table>
+      <thead><tr><th>Unit</th><th>Role</th></tr></thead>
+      <tbody>
+        <tr><td>PCUs — Pattern Compute Units</td><td>Reconfigurable compute (matrix/vector math)</td></tr>
+        <tr><td>PMUs — Pattern Memory Units</td><td>Distributed on-chip memory next to compute</td></tr>
+        <tr><td>Switching fabric</td><td>Programmable interconnect linking PCUs &amp; PMUs</td></tr>
+        <tr><td>SambaFlow</td><td>Compiler that maps the dataflow graph onto the fabric</td></tr>
+      </tbody>
+    </table>
+    <div class="callout"><strong>Built for big models:</strong> a three-tier memory system with large capacity holds <strong>very large models</strong> (hundreds of billions of parameters) and <strong>long context</strong> on fewer devices.</div>
+    <div class="sfoot"><span><b>RDU</b> · Inside the chip</span><span class="pageno">5 / 10</span></div>
+  </section>
+
+  <!-- 6 · RDU vs GPU -->
+  <section class="slide">
+    <div class="blob"></div>
+    <h2><span class="n">5</span> RDU vs GPU</h2>
+    <table>
+      <thead><tr><th>Feature</th><th>GPU</th><th>RDU</th></tr></thead>
+      <tbody>
+        <tr><td>Execution</td><td>Kernel streams</td><td>Spatial dataflow</td></tr>
+        <tr><td>Adapts to model</td><td>Fixed cores</td><td>Reconfigures to graph</td></tr>
+        <tr><td>Memory traffic</td><td>High round-trips</td><td>On-chip streaming</td></tr>
+        <tr><td>Big-model focus</td><td>Split many GPUs</td><td>Fewer chips</td></tr>
+        <tr><td>Software</td><td>CUDA</td><td>SambaFlow</td></tr>
+      </tbody>
+    </table>
+    <div class="callout">GPUs run <strong>kernels</strong> with constant memory traffic — RDUs <strong>become the dataflow</strong>.</div>
+    <div class="sfoot"><span><b>RDU</b> · The key contrast</span><span class="pageno">6 / 10</span></div>
+  </section>
+
+  <!-- 7 · APPLICATIONS -->
+  <section class="slide">
+    <div class="blob"></div>
+    <h2><span class="n">6</span> Applications</h2>
+    <p>The RDU targets <strong>very large AI models</strong>, often run on-premise:</p>
+    <div class="badges">
+      <span class="badge">🧠 Large language models</span>
+      <span class="badge">📚 Long-context / huge-parameter</span>
+      <span class="badge">🏢 Enterprise &amp; government AI</span>
+      <span class="badge">🔀 Composition of Experts</span>
+      <span class="badge">🔬 On-prem / regulated AI</span>
+    </div>
+    <div class="twocol">
+      <div class="panel good"><h4>✅ Why pick an RDU</h4>
+        <ul><li>Big models on fewer chips</li><li>Less memory overhead via dataflow</li><li>Flexible — reconfigures per model</li><li>Delivered as a turnkey system</li></ul></div>
+      <div class="panel bad"><h4>⛔ Not for</h4>
+        <ul><li>General computing → CPU</li><li>Graphics → GPU</li><li>Broadest open ecosystem (CUDA)</li><li>Tiny edge / low-power → NPU</li></ul></div>
+    </div>
+    <div class="sfoot"><span><b>RDU</b> · Where it shines</span><span class="pageno">7 / 10</span></div>
+  </section>
+
+  <!-- 8 · MARKET -->
+  <section class="slide">
+    <div class="blob"></div>
+    <h2><span class="n">7</span> Market &amp; future</h2>
+    <table>
+      <thead><tr><th>Item</th><th>Note</th></tr></thead>
+      <tbody>
+        <tr><td>SN10 / SN30 / SN40L</td><td>Successive RDU generations</td></tr>
+        <tr><td>DataScale systems</td><td>Full racks delivered to customers</td></tr>
+        <tr><td>SambaNova Suite</td><td>Enterprise AI platform (models + hardware)</td></tr>
+        <tr><td>SambaFlow</td><td>The dataflow compiler / software stack</td></tr>
+      </tbody>
+    </table>
+    <div class="callout">SambaNova sells <strong>complete AI systems</strong> — hardware + models + software — for enterprises and governments running large models <strong>on-premise</strong>; the <strong>SN40L</strong> adds big on-package memory.</div>
+    <div class="sfoot"><span><b>RDU</b> · Who builds them</span><span class="pageno">8 / 10</span></div>
+  </section>
+
+  <!-- 9 · SUMMARY -->
+  <section class="slide">
+    <div class="blob"></div>
+    <h2><span class="n">8</span> RDU in one paragraph</h2>
+    <div class="essence">
+      <p>The RDU is SambaNova's AI processor built on a <strong>Reconfigurable Dataflow Architecture</strong>: a compiler arranges its <strong>Pattern Compute Units</strong> and <strong>Pattern Memory Units</strong> into a spatial pipeline shaped like the model's <strong>dataflow graph</strong>, so data streams between stages on-chip with little memory overhead. With large memory capacity it runs <em>very large models on fewer chips</em>, delivered as turnkey enterprise systems.</p>
+    </div>
+    <div class="twocol" style="margin-top:24px">
+      <div class="panel good"><h4>Choose an RDU when…</h4>
+        <ul><li>Very large models / long context</li><li>Big models on fewer chips</li><li>A turnkey on-prem system</li><li>You benefit from dataflow efficiency</li></ul></div>
+      <div class="panel"><h4>Future trends</h4>
+        <ul><li>Large on-package memory</li><li>Composition-of-Experts serving</li><li>Enterprise &amp; sovereign AI appliances</li><li>Dataflow architectures maturing</li></ul></div>
+    </div>
+    <div class="sfoot"><span><b>RDU</b> · The takeaway</span><span class="pageno">9 / 10</span></div>
+  </section>
+
+  <!-- 10 · CLOSING -->
+  <section class="slide cta">
+    <div class="big-emoji" style="font-size:5rem;margin-bottom:8px">🔀</div>
+    <h2>The reconfigurable dataflow chip</h2>
+    <p>A processor that reshapes its compute and memory into the model's dataflow graph — running very large models on fewer chips.</p>
+    <div class="sfoot"><span><b>RDU</b> · Reconfigurable Dataflow Unit</span><span class="pageno">10 / 10</span></div>
+  </section>
+
+</body>
+</html>
