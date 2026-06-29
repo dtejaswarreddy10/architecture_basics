@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dojo — LinkedIn Carousel</title>
+<style>
+  :root{
+    --accent:#B91C1C;        /* deep red */
+    --accent-dark:#991b1b;
+    --accent-soft:#fbe0e0;
+    --ink:#0f1b27;
+    --muted:#5a6b7b;
+    --line:#cfe0f1;
+    --good:#0d9488;
+    --bad:#e0566f;
+    --slideW:1080px;
+    --slideH:1350px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:#33414f}
+  body{font-family:"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;
+       color:var(--ink);line-height:1.5;padding:24px;display:flex;flex-direction:column;
+       align-items:center;gap:24px}
+
+  /* on-screen helper bar (hidden when printing) */
+  .toolbar{position:sticky;top:0;z-index:50;background:#0f1b27;color:#fff;
+    width:var(--slideW);max-width:100%;border-radius:14px;padding:14px 20px;
+    display:flex;align-items:center;gap:14px;font-size:.9rem;box-shadow:0 8px 24px rgba(0,0,0,.4)}
+  .toolbar b{color:#7ec2ff}
+  .toolbar .hint{opacity:.8}
+
+  /* ---- each slide = one PDF page ---- */
+  .slide{position:relative;width:var(--slideW);height:var(--slideH);
+    background:#fff;border-radius:26px;overflow:hidden;
+    box-shadow:0 18px 50px rgba(0,0,0,.45);
+    display:flex;flex-direction:column;padding:84px 78px 70px}
+  .slide::before{content:"";position:absolute;top:0;left:0;right:0;height:14px;
+    background:linear-gradient(90deg,var(--accent),var(--accent-dark))}
+
+  /* decorative soft circle */
+  .slide .blob{position:absolute;width:520px;height:520px;border-radius:50%;
+    right:-180px;top:-160px;background:radial-gradient(circle,var(--accent-soft),transparent 70%);
+    opacity:.9;pointer-events:none}
+
+  .kicker{color:var(--accent);font-weight:800;letter-spacing:4px;
+    text-transform:uppercase;font-size:1rem;margin-bottom:8px}
+  .slide h1{font-size:3.4rem;line-height:1.08;color:var(--accent-dark);margin-bottom:14px}
+  .slide h2{font-size:2.5rem;line-height:1.12;color:var(--accent-dark);
+    display:flex;align-items:center;gap:18px;margin-bottom:26px}
+  .slide h2 .n{flex:0 0 auto;width:64px;height:64px;border-radius:16px;
+    background:var(--accent);color:#fff;display:grid;place-items:center;
+    font-size:1.8rem;font-weight:800}
+  .slide h3{font-size:1.6rem;color:var(--accent-dark);margin:22px 0 8px}
+  .slide p{font-size:1.42rem;margin:8px 0;color:var(--ink)}
+  .slide p .mut{color:var(--muted)}
+  .slide ul{margin:6px 0 6px 4px;list-style:none}
+  .slide li{font-size:1.4rem;margin:12px 0;padding-left:38px;position:relative}
+  .slide li::before{content:"▸";position:absolute;left:6px;color:var(--accent);font-weight:800}
+
+  .lead{font-size:1.7rem;color:var(--muted);margin-top:6px;max-width:90%}
+
+  .callout{border-left:8px solid var(--accent);background:var(--accent-soft);
+    padding:24px 28px;border-radius:0 18px 18px 0;margin:26px 0;
+    font-size:1.55rem;font-weight:600;color:var(--accent-dark)}
+
+  /* pipeline */
+  .pipe{display:flex;flex-wrap:wrap;gap:18px 30px;margin:20px 0}
+  .stage{flex:1;min-width:160px;background:#fff;border:3px solid var(--accent);
+    border-radius:18px;padding:22px 14px;text-align:center;position:relative}
+  .stage .s{font-weight:800;color:var(--accent-dark);font-size:1.5rem;display:block;margin-bottom:6px}
+  .stage small{color:var(--muted);font-size:1.05rem}
+
+  .badges{display:flex;flex-wrap:wrap;gap:14px;margin:18px 0}
+  .badge{background:var(--accent-soft);color:var(--accent-dark);border:2px solid var(--line);
+    padding:14px 22px;border-radius:14px;font-size:1.35rem;font-weight:700}
+
+  .stats{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin:22px 0}
+  .stat{background:linear-gradient(160deg,#fff,var(--accent-soft));border:2px solid var(--line);
+    border-radius:20px;padding:28px 20px;text-align:center}
+  .stat .num{font-size:2.4rem;font-weight:800;color:var(--accent-dark)}
+  .stat .lbl{font-size:1.15rem;color:var(--muted);text-transform:uppercase;
+    letter-spacing:1px;margin-top:6px}
+
+  table{width:100%;border-collapse:collapse;margin:18px 0;font-size:1.4rem}
+  th,td{padding:18px 22px;text-align:left;border-bottom:2px solid var(--line)}
+  thead th{background:var(--accent);color:#fff;font-size:1.45rem}
+  tbody tr:nth-child(even){background:var(--accent-soft)}
+
+  .twocol{display:grid;grid-template-columns:1fr 1fr;gap:26px;margin:22px 0}
+  .panel{border:2px solid var(--line);border-radius:20px;padding:26px 28px;background:#fff}
+  .panel h4{font-size:1.6rem;margin-bottom:8px;color:var(--accent-dark)}
+  .panel.good{border-color:var(--good)} .panel.good h4{color:var(--good)}
+  .panel.bad{border-color:var(--bad)} .panel.bad h4{color:var(--bad)}
+
+  .essence{background:linear-gradient(160deg,var(--accent-soft),#fff);
+    border:2px solid var(--line);border-radius:22px;padding:34px 38px}
+  .essence h3{margin-top:0}
+
+  /* footer of every slide */
+  .sfoot{margin-top:auto;display:flex;justify-content:space-between;align-items:center;
+    padding-top:24px;border-top:2px solid var(--line);color:var(--muted);font-size:1.15rem}
+  .sfoot b{color:var(--accent-dark)}
+  .pageno{font-weight:800;color:var(--accent)}
+
+  /* cover slide */
+  .cover{background:radial-gradient(900px 600px at 80% -10%,rgba(255,255,255,.16),transparent 60%),
+                  linear-gradient(160deg,#0c1620,var(--accent-dark) 55%,var(--accent));color:#fff;justify-content:center}
+  .cover::before{background:linear-gradient(90deg,#fff,rgba(255,255,255,.45))}
+  .cover .kicker{color:rgba(255,255,255,.82)}
+  .cover h1{color:#fff;font-size:5.2rem}
+  .cover .lead{color:rgba(255,255,255,.9);font-size:1.95rem}
+  .cover .big-emoji{font-size:6rem;margin-bottom:10px}
+  .cover .sfoot{border-top-color:rgba(255,255,255,.25);color:rgba(255,255,255,.78)}
+  .cover .sfoot b{color:#fff}
+  .cover .pageno{color:rgba(255,255,255,.82)}
+
+  /* closing CTA slide */
+  .cta{background:linear-gradient(160deg,#0c1620,var(--accent-dark) 55%,var(--accent));color:#fff;justify-content:center;text-align:center}
+  .cta::before{background:linear-gradient(90deg,#fff,rgba(255,255,255,.45))}
+  .cta h2{color:#fff;justify-content:center}
+  .cta p{color:rgba(255,255,255,.9);font-size:1.7rem}
+  .cta .like{margin-top:30px;font-size:1.5rem;font-weight:700;color:#fff;
+    background:rgba(255,255,255,.14);border:2px solid rgba(255,255,255,.4);
+    border-radius:16px;padding:22px 28px;display:inline-block}
+  .cta .sfoot{border-top-color:rgba(255,255,255,.25);color:rgba(255,255,255,.78)}
+  .cta .sfoot b{color:#fff}
+  .cta .pageno{color:rgba(255,255,255,.82)}
+
+  /* ---- print: one slide per page, no shadows ---- */
+  @page{size:1080px 1350px;margin:0}
+  @media print{
+    html,body{background:#fff;padding:0;gap:0}
+    .toolbar{display:none !important}
+    .slide{border-radius:0;box-shadow:none;break-after:page;page-break-after:always;
+      margin:0;width:1080px;height:1350px}
+    .slide:last-child{break-after:auto;page-break-after:auto}
+  }
+</style>
+</head>
+<body>
+
+  <div class="toolbar no-print">
+    🖨️ <b>To export this LinkedIn carousel:</b>
+    <span class="hint">Press <b>Ctrl/Cmd&nbsp;+&nbsp;P</b> → Destination <b>Save as PDF</b> → Margins <b>None</b> → Background graphics <b>ON</b> → Save. Upload the PDF to LinkedIn as a <b>Document</b> post.</span>
+  </div>
+
+  <!-- 1 · COVER -->
+  <section class="slide cover">
+    <div class="big-emoji">🚗</div>
+    <div class="kicker">VLSI Architectures</div>
+    <h1>Dojo</h1>
+    <p class="lead">A custom supercomputer Tesla designed to train its self-driving neural networks on enormous amounts of video — built from its own D1 chip and scaled by tiling: chips → tiles → cabinets → ExaPOD.</p>
+    <div class="sfoot"><span><b>Swipe →</b> to learn how Dojo works</span><span class="pageno">1 / 10</span></div>
+  </section>
+
+  <!-- 2 · INTRO -->
+  <section class="slide">
+    <div class="blob"></div>
+    <h2><span class="n">1</span> What is Dojo?</h2>
+    <p><strong>Dojo</strong> is a <strong>custom AI training supercomputer</strong> built by <strong>Tesla</strong> to train the vision networks behind <strong>Full Self-Driving (FSD)</strong> and Autopilot.</p>
+    <p>It isn't a product you can buy — it was an <strong>internal machine</strong> built from Tesla's own <strong>D1 chip</strong>, optimized for one job: <strong>training on video at massive scale</strong>.</p>
+    <div class="callout">Build a <strong>seamless, tileable fabric</strong> of compute optimized for one workload — removing the boundaries between chips so many dies behave like one huge surface.</div>
+    <div class="sfoot"><span><b>Dojo</b> · Tesla's AI training machine</span><span class="pageno">2 / 10</span></div>
+  </section>
+
+  <!-- 3 · ORIGINS -->
+  <section class="slide">
+    <div class="blob"></div>
+    <h2><span class="n">2</span> Where Dojo came from</h2>
+    <p>Tesla collects <strong>vast camera video</strong> from its fleet. Training on that data demanded enormous compute, so rather than only buying GPUs, Tesla designed a <strong>vertically integrated</strong> system — its own chip, board, and interconnect — tuned for <strong>video-heavy training</strong>.</p>
+    <h3>Analogy: building with LEGO tiles</h3>
+    <p>Dojo scales like <strong>snapping LEGO tiles together</strong>: one block (a D1 chip) repeats into a tile, tiles snap into cabinets, cabinets combine into a full system — each level a bigger, seamless version of the same thing.</p>
+    <div class="callout">⚠️ <strong>Status (2026):</strong> Tesla reportedly <strong>wound down its dedicated Dojo program in 2025</strong> — yet it remains an influential example of vertically integrated AI-training hardware.</div>
+    <div class="sfoot"><span><b>Dojo</b> · Origins &amp; idea</span><span class="pageno">3 / 10</span></div>
+  </section>
+
+  <!-- 4 · SCALING HIERARCHY -->
+  <section class="slide">
+    <div class="blob"></div>
+    <h2><span class="n">3</span> The scaling hierarchy</h2>
+    <p>Dojo is built by <strong>tiling</strong> the same block over and over — each level a bigger, seamless version of the last:</p>
+    <div class="pipe">
+      <div class="stage"><span class="s">D1 chip</span><small>custom die</small></div>
+      <div class="stage"><span class="s">Training Tile</span><small>25 D1 dies</small></div>
+      <div class="stage"><span class="s">Cabinet</span><small>many tiles</small></div>
+      <div class="stage"><span class="s">ExaPOD</span><small>full system</small></div>
+    </div>
+    <div class="callout">Inside a tile, <strong>25 dies act like one large chip</strong> — Dojo's philosophy was to remove the boundaries between chips.</div>
+    <div class="sfoot"><span><b>Dojo</b> · chips → tiles → cabinets → ExaPOD</span><span class="pageno">4 / 10</span></div>
+  </section>
+
+  <!-- 5 · KEY NUMBERS -->
+  <section class="slide">
+    <div class="blob"></div>
+    <h2><span class="n">4</span> Key numbers</h2>
+    <div class="stats">
+      <div class="stat"><div class="num">D1</div><div class="lbl">Tesla's custom die</div></div>
+      <div class="stat"><div class="num">25</div><div class="lbl">D1 dies / Training Tile</div></div>
+      <div class="stat"><div class="num">2-D mesh</div><div class="lbl">die interconnect</div></div>
+      <div class="stat"><div class="num">CFP8</div><div class="lbl">configurable 8-bit float</div></div>
+    </div>
+    <div class="callout">The whole stack is <strong>bandwidth-first</strong> — everything is built to keep data flowing to compute.</div>
+    <div class="sfoot"><span><b>Dojo</b> · Key numbers</span><span class="pageno">5 / 10</span></div>
+  </section>
+
+  <!-- 6 · DESIGN IDEAS -->
+  <section class="slide">
+    <div class="blob"></div>
+    <h2><span class="n">5</span> Key design ideas</h2>
+    <table>
+      <thead><tr><th>Idea</th><th>What it does</th></tr></thead>
+      <tbody>
+        <tr><td>Mesh interconnect</td><td>D1 dies in a 2-D mesh — high bandwidth, low latency</td></tr>
+        <tr><td>Seamless tiles</td><td>25 dies act like one large chip — fewer boundaries</td></tr>
+        <tr><td>CFP8 datatype</td><td>Configurable 8-bit float balancing range / precision</td></tr>
+        <tr><td>Bandwidth-first</td><td>Whole stack keeps data flowing to compute</td></tr>
+      </tbody>
+    </table>
+    <div class="sfoot"><span><b>Dojo</b> · How it's designed</span><span class="pageno">6 / 10</span></div>
+  </section>
+
+  <!-- 7 · DOJO vs GPU CLUSTER -->
+  <section class="slide">
+    <div class="blob"></div>
+    <h2><span class="n">6</span> Dojo vs a GPU cluster</h2>
+    <table>
+      <thead><tr><th>Feature</th><th>GPU cluster</th><th>Dojo</th></tr></thead>
+      <tbody>
+        <tr><td>Purpose</td><td>General AI / compute</td><td>Tesla video training</td></tr>
+        <tr><td>Chip</td><td>Off-the-shelf GPU</td><td>Custom D1</td></tr>
+        <tr><td>Scaling unit</td><td>Server + switches</td><td>Training Tile (25 dies)</td></tr>
+        <tr><td>Datatype</td><td>FP16 / BF16 / FP8</td><td>CFP8 (configurable)</td></tr>
+        <tr><td>Availability</td><td>Buy / rent</td><td>Internal to Tesla</td></tr>
+      </tbody>
+    </table>
+    <div class="callout">A GPU cluster is <strong>general-purpose</strong>; Dojo was <strong>purpose-built</strong> for one workload.</div>
+    <div class="sfoot"><span><b>Dojo</b> · The key contrast</span><span class="pageno">7 / 10</span></div>
+  </section>
+
+  <!-- 8 · APPLICATIONS -->
+  <section class="slide">
+    <div class="blob"></div>
+    <h2><span class="n">7</span> Applications</h2>
+    <div class="badges">
+      <span class="badge">🚗 Autonomous-driving vision training</span>
+      <span class="badge">🎥 Video-heavy neural-net training</span>
+      <span class="badge">🤖 Tesla AI / robotics</span>
+      <span class="badge">🏭 In-house vertically integrated compute</span>
+    </div>
+    <div class="twocol">
+      <div class="panel good"><h4>✅ Why Tesla built it</h4>
+        <ul><li>Tailored to its exact workload</li><li>Bandwidth optimized for video</li><li>Vertical integration — full-stack control</li><li>Hedge against GPU-only dependence</li></ul></div>
+      <div class="panel bad"><h4>⛔ What it's NOT</h4>
+        <ul><li>A chip you can buy or rent</li><li>General computing → CPU</li><li>Graphics → GPU</li><li>In-car inference (separate FSD chip)</li></ul></div>
+    </div>
+    <div class="sfoot"><span><b>Dojo</b> · Where it's used</span><span class="pageno">8 / 10</span></div>
+  </section>
+
+  <!-- 9 · SUMMARY -->
+  <section class="slide">
+    <div class="blob"></div>
+    <h2><span class="n">8</span> Dojo in one paragraph</h2>
+    <div class="essence">
+      <p>Dojo was <strong>Tesla's custom AI training supercomputer</strong>, built from its own <strong>D1 chip</strong> and scaled by tiling — <strong>25 D1 dies</strong> form a seamless <strong>Training Tile</strong>, tiles fill cabinets, and many cabinets make an <strong>ExaPOD</strong>. Connected by a high-bandwidth <strong>mesh</strong> and using a configurable <strong>CFP8</strong> datatype, it was tuned for training Tesla's <strong>video-based self-driving</strong> networks — a bold example of vertical integration, though Tesla reportedly wound the dedicated program down in 2025.</p>
+    </div>
+    <div class="twocol" style="margin-top:24px">
+      <div class="panel good"><h4>A bespoke machine fits when…</h4>
+        <ul><li>You have a single dominant workload</li><li>You own enormous proprietary data</li><li>You want full-stack control</li><li>You can absorb the cost &amp; risk</li></ul></div>
+      <div class="panel"><h4>Future trends</h4>
+        <ul><li>Tiling / mesh scaling lives on</li><li>Custom training datatypes spreading</li><li>More exploring custom silicon — cautiously</li><li>Build-vs-buy stays a key question</li></ul></div>
+    </div>
+    <div class="sfoot"><span><b>Dojo</b> · The takeaway</span><span class="pageno">9 / 10</span></div>
+  </section>
+
+  <!-- 10 · CLOSING -->
+  <section class="slide cta">
+    <div class="big-emoji" style="font-size:5rem;margin-bottom:8px">🚗</div>
+    <h2>A tiled training supercomputer</h2>
+    <p>Tesla's vertically integrated machine — D1 chips tiled into a seamless, bandwidth-first fabric, built to train self-driving on video at massive scale.</p>
+    <div class="sfoot"><span><b>Dojo</b> · AI Training Supercomputer · Tesla</span><span class="pageno">10 / 10</span></div>
+  </section>
+
+</body>
+</html>
